@@ -71,11 +71,11 @@ router.delete('/estudiante/:id', verificarTokenJWT, (req, res, next) => {
 
 
 // Confirmar email estudiante
-router.get('/confirmar/:token', confirmarMailEstudiante)
+router.get('/estudiante/confirmar/:token', confirmarMailEstudiante)
 // Recuperar password estudiante
-router.post('/recuperarpassword', recuperarPasswordEstudiante)
-router.get('/recuperarpassword/:token', comprobarTokenPasswordEstudiante)
-router.post('/nuevopassword/:token', crearNuevoPasswordEstudiante)
+router.post('/estudiante/recuperarpassword', recuperarPasswordEstudiante)
+router.get('/estudiante/recuperarpassword/:token', comprobarTokenPasswordEstudiante)
+router.post('/estudiante/nuevopassword/:token', crearNuevoPasswordEstudiante)
 
 // Actualizar password desde perfil (autenticado)
 router.put('/estudiante/actualizarpassword/:id', verificarTokenJWT, actualizarPasswordEstudiante)
