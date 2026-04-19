@@ -44,6 +44,11 @@ const departamentoSchema = new Schema({
     type: [String], // Ejemplo: ['Agua', 'Luz', 'Internet']
     default: []
   },
+  urlMapa: {
+    type: String,
+    trim: true,
+    default: null
+  },
   imagenes: [{
   url: { type: String, required: true },
   public_id: { type: String, required: true }

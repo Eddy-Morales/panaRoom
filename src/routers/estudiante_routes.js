@@ -8,15 +8,24 @@ import {
 } from '../controllers/administrador_controller.js'
 import {
 	registrarEstudiante,
-	
 	actualizarEstudiante,
 	eliminarEstudiante,
-	loginEstudiante
+	loginEstudiante,
+	confirmarMailEstudiante,
+	recuperarPasswordEstudiante,
+	comprobarTokenPasswordEstudiante,
+	crearNuevoPasswordEstudiante,
+	actualizarPasswordEstudiante,
+	actualizarPerfilEstudiante
 } from '../controllers/estudiante_controller.js'
-
 import { verificarTokenJWT } from '../middlewares/JWT.js'
 
+
+
+
+
 const router = Router()
+
 
 // Login estudiante
 router.post('/loginEstudiante', loginEstudiante)
@@ -42,15 +51,13 @@ router.get('/estudiantes', verificarTokenJWT, (req, res, next) => {
   }
   return res.status(403).json({ msg: 'Solo el administrador puede listar estudiantes' });
 })
-// Actualizar estudiante
+// Actualizar estudiante (admin o propio)
 router.put('/estudiante/:id', verificarTokenJWT, (req, res, next) => {
-	// Si es admin, puede actualizar cualquier estudiante
 	if (req.administradorBDD) {
 		return actualizarEstudianteAdmin(req, res, next);
 	}
-	// Si es estudiante, solo puede actualizar su propio perfil
 	if (req.estudianteBDD && req.estudianteBDD._id.toString() === req.params.id) {
-		return actualizarEstudiante(req, res, next);
+		return actualizarPerfilEstudiante(req, res, next);
 	}
 	return res.status(403).json({ msg: 'No tienes permisos para actualizar este estudiante' });
 })
@@ -61,5 +68,20 @@ router.delete('/estudiante/:id', verificarTokenJWT, (req, res, next) => {
 	}
 	return eliminarEstudiante(req, res, next);
 })
+
+
+// Confirmar email estudiante
+router.get('/confirmar/:token', confirmarMailEstudiante)
+// Recuperar password estudiante
+router.post('/recuperarpassword', recuperarPasswordEstudiante)
+router.get('/recuperarpassword/:token', comprobarTokenPasswordEstudiante)
+router.post('/nuevopassword/:token', crearNuevoPasswordEstudiante)
+
+// Actualizar password desde perfil (autenticado)
+router.put('/estudiante/actualizarpassword/:id', verificarTokenJWT, actualizarPasswordEstudiante)
+
+// Actualizar perfil estudiante (autenticado)
+router.put('/estudiante/perfil/:id', verificarTokenJWT, actualizarPerfilEstudiante)
+
 
 export default router
