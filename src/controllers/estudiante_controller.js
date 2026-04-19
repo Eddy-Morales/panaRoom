@@ -8,13 +8,18 @@ import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodema
 
 // --- Recuperación y actualización de contraseña  ---
 const confirmarMailEstudiante = async (req, res) => {
-	if (!(req.params.token)) return res.status(400).json({ msg: "Lo sentimos, no se puede validar la cuenta" })
-	const estudianteBDD = await Estudiante.findOne({ token: req.params.token })
-	if (!estudianteBDD?.token) return res.status(404).json({ msg: "La cuenta ya ha sido confirmada" })
-	estudianteBDD.token = null
-	estudianteBDD.confirmEmail = true
-	await estudianteBDD.save()
-	res.status(200).json({ msg: "Token confirmado, ya puedes iniciar sesión" })
+    try {
+        if (!(req.params.token)) return res.status(400).json({ msg: "Lo sentimos, no se puede validar la cuenta" })
+        const estudianteBDD = await Estudiante.findOne({ token: req.params.token })
+        if (!estudianteBDD?.token) return res.status(404).json({ msg: "La cuenta ya ha sido confirmada" })
+        estudianteBDD.token = null
+        estudianteBDD.confirmEmail = true
+        await estudianteBDD.save()
+        res.status(200).json({ msg: "Token confirmado, ya puedes iniciar sesión" })
+    } catch (error) {
+        console.error("Error al confirmar email:", error)
+        res.status(500).json({ msg: "Error interno al confirmar email" })
+    }
 }
 
 const recuperarPasswordEstudiante = async (req, res) => {
