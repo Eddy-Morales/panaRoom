@@ -61,6 +61,10 @@ const departamentoSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Estudiante',
     default: null
+  },
+  parqueadero: {
+    type: Boolean,
+    default: false // o true, según prefieras el valor por defecto
   }
 }, {
   timestamps: true

@@ -1,17 +1,47 @@
 import { Router } from 'express'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
-import {login,perfil, registro, registroArrendatario} from '../controllers/administrador_controller.js'
+import {login,perfil, registro, registroArrendatario, listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin, recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador, crearNuevoPasswordAdministrador, actualizarPasswordAdministrador, actualizarPerfilAdministrador} from '../controllers/administrador_controller.js'
 
 const router = Router()
 
 router.post('/administrador/registro', registro) // http://localhost:3000/api/registro
 router.post('/loginAd', login)
 router.get('/perfilAd',verificarTokenJWT,perfil)
-router.post('/registroArrendatario', verificarTokenJWT, (req, res, next) => {
+router.post('/administrador/registroArrendatario', verificarTokenJWT, (req, res, next) => {
   if (!req.administradorBDD) {
     return res.status(403).json({ msg: 'Solo el administrador puede crear arrendatarios' });
   }
   return registroArrendatario(req, res, next);
 });
 
+// Ruta para listar arrendatarios no confirmados (confirmEmail: false)
+router.get('/administrador/arrendatarios/noconfirmados', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede ver esta información' });
+  }
+  return listarArrendatariosNoConfirmados(req, res, next);
+});
+
+// Ruta para que el administrador confirme un arrendatario por id
+router.put('/arrendatarios/confirmar/:id', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
+  }
+  return confirmarArrendatarioPorAdmin(req, res, next);
+});
+
+// --- Rutas para recuperación y cambio de contraseña de administrador ---
+// Recuperar password administrador
+router.post('/administrador/recuperarpassword', recuperarPasswordAdministrador);
+// Comprobar token para nuevo password
+router.get('/administrador/recuperarpassword/:token', comprobarTokenPasswordAdministrador);
+// Crear nuevo password con token
+router.post('/administrador/nuevopassword/:token', crearNuevoPasswordAdministrador);
+// Actualizar password desde perfil (autenticado)
+router.put('/administrador/actualizarpassword/:id', verificarTokenJWT, actualizarPasswordAdministrador);
+// Actualizar perfil del administrador (autenticado)
+router.put('/administrador/perfil/:id', verificarTokenJWT, actualizarPerfilAdministrador);
 export default router
+
+
+

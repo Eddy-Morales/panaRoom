@@ -1,3 +1,4 @@
+
 import nodemailer from "nodemailer"
 import dotenv from 'dotenv'
 dotenv.config()
@@ -14,6 +15,34 @@ let transporter = nodemailer.createTransport({
     }
 });
 
+
+// Enviar correo de bienvenida con usuario y contraseña al arrendatario
+const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
+    let info = await transporter.sendMail({
+        from: process.env.USER_MAILTRAP,
+        to: userMail,
+        subject: "¡Bienvenido a Pana Room! Tus credenciales de acceso",
+        html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
+            <h1 style="text-align:center; color:#2F8F9D;">🏡 Pana Room - Bienvenido</h1>
+            <p style="font-size:16px; text-align:center;">¡Hola <b>${usuario}</b>! Tu cuenta ha sido creada exitosamente.</p>
+            <p style="font-size:16px; text-align:center;">Aquí tienes tus credenciales de acceso:</p>
+            <div style="text-align:center; margin: 20px 0;">
+                <table style="margin: 0 auto; font-size:16px;">
+                    <tr><td style="padding: 5px 10px; font-weight:bold;">Usuario (email):</td><td style="padding: 5px 10px;">${userMail}</td></tr>
+                    <tr><td style="padding: 5px 10px; font-weight:bold;">Contraseña:</td><td style="padding: 5px 10px;">${password}</td></tr>
+                </table>
+            </div>
+            <p style="font-size:15px; text-align:center; color:#888;">Te recomendamos cambiar tu contraseña después de iniciar sesión por primera vez.</p>
+            <hr>
+            <footer style="text-align:center; font-size:14px; color:#555;">
+                El equipo de Pana Room te ayuda a encontrar el mejor alojamiento universitario. 🏡✨
+            </footer>
+        </div>
+        `
+    });
+    console.log("Correo de bienvenida enviado satisfactoriamente:", info.messageId);
+};
 
 const sendMailToRegister = (userMail, token) => {
     let mailOptions = {
@@ -81,4 +110,5 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
 export {
     sendMailToRegister,
     sendMailToRecoveryPassword
+    ,sendWelcomeMailArrendatario
 }

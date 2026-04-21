@@ -35,10 +35,7 @@ const arrendatarioSchema = new Schema({
   trim: true
 },
 password: {
-  type: String,
-  required: function () {
-    return !this.googleId; // Solo se requiere si no es usuario de Google
-  }
+  type: String
 },
   status: {
     type: Boolean,

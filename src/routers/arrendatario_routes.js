@@ -1,10 +1,11 @@
 import { Router } from 'express'
 import passport from "passport";
 import {
+  crearArrendatario,
   actualizarPassword,
   actualizarPerfil,
   comprobarTokenPasword,
-  confirmarMail,
+  
   crearNuevoPassword,
   login,
   perfil,
@@ -17,12 +18,15 @@ import { verificarTokenJWT } from '../middlewares/JWT.js'
 const router = Router()
 
 
-router.get('/confirmar/:token', confirmarMail)
-router.post('/recuperarpassword', recuperarPassword)
-router.get('/recuperarpassword/:token', comprobarTokenPasword)
-router.post('/nuevopassword/:token', crearNuevoPassword)
-router.post('/login', login)
-router.get('/perfil',verificarTokenJWT,perfil)
+// Ruta para crear arrendatario sin autenticación ni token
+router.post('/arrendatario/crear', crearArrendatario)
+
+
+router.post('/arrendatario/recuperarpassword', recuperarPassword)
+router.get('/arrendatario/recuperarpassword/:token', comprobarTokenPasword)
+router.post('/arrendatario/nuevopassword/:token', crearNuevoPassword)
+router.post('/arrendatario/login', login)
+router.get('/arrendatario/perfil',verificarTokenJWT,perfil)
 router.put('/arrendatario/:id',verificarTokenJWT,actualizarPerfil)
 router.put('/arrendatario/actualizarpassword/:id',verificarTokenJWT,actualizarPassword)
 router.get("/arrendatarios",verificarTokenJWT,listarArrendatarios)

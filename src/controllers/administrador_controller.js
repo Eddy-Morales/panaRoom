@@ -1,10 +1,44 @@
 
+
 import Administrador from "../models/Administrador.js"
 import Estudiante from "../models/Estudiante.js"
 import Arrendatario from "../models/Arrendatario.js"
 import { crearTokenJWT } from "../middlewares/JWT.js"
 import mongoose from "mongoose"
-import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js"
+import { sendMailToRegister, sendMailToRecoveryPassword, sendWelcomeMailArrendatario } from "../config/nodemailer.js"
+
+// Listar arrendatarios con confirmEmail en false
+const listarArrendatariosNoConfirmados = async (req, res) => {
+  try {
+    const arrendatarios = await Arrendatario.find({ confirmEmail: false }).select("-createdAt -updatedAt -__v");
+    res.status(200).json(arrendatarios);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar arrendatarios no confirmados", error });
+  }
+};
+
+// Cambiar confirmEmail de arrendatario a true por id, asignar password igual al email y enviar correo de bienvenida
+const confirmarArrendatarioPorAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de arrendatario no válido" });
+    }
+    const arrendatario = await Arrendatario.findById(id);
+    if (!arrendatario) {
+      return res.status(404).json({ msg: "Arrendatario no encontrado" });
+    }
+    arrendatario.confirmEmail = true;
+    // Asignar password igual al email y encriptar
+    arrendatario.password = await arrendatario.encrypPassword(arrendatario.email);
+    await arrendatario.save();
+    // Enviar correo de bienvenida con email y password
+    await sendWelcomeMailArrendatario(arrendatario.email, arrendatario.nombre || arrendatario.email, arrendatario.email);
+    res.status(200).json({ msg: "Arrendatario confirmado correctamente y credenciales enviadas", arrendatario });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al confirmar arrendatario", error: error.message });
+  }
+};
 
 const registro = async (req, res) => {
   const { email, password } = req.body
@@ -41,19 +75,7 @@ const perfil =(req,res)=>{
     res.status(200).json(datosPerfil)
 }
 
-export {
-  registro,
-  login,  
-  perfil
-  ,
-  // CRUD para Estudiante
-  registrarEstudiante,
-  listarEstudiantes,
-  actualizarEstudiante,
-  eliminarEstudiante,
 
-  registroArrendatario
-}
 
 // --- CRUD para Estudiante ---
 // Crear estudiante
@@ -138,4 +160,89 @@ const registroArrendatario = async (req, res) => {
   await sendMailToRegister(email, token)
   await nuevoArrendatario.save()
   res.status(200).json({ msg: "Revisa tu correo electrónico para confirmar tu cuenta" })
+}
+
+// Actualizar perfil del administrador
+const actualizarPerfilAdministrador = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { nombre, apellido, direccion, telefono } = req.body;
+    if (!mongoose.Types.ObjectId.isValid(id))
+      return res.status(404).json({ msg: `Debe ser un id válido` });
+    const adminBDD = await Administrador.findById(id);
+    if (!adminBDD)
+      return res.status(404).json({ msg: `No existe el administrador ${id}` });
+    adminBDD.nombre = nombre ?? adminBDD.nombre;
+    adminBDD.apellido = apellido ?? adminBDD.apellido;
+    adminBDD.direccion = direccion ?? adminBDD.direccion;
+    adminBDD.telefono = telefono ?? adminBDD.telefono;
+    await adminBDD.save();
+    res.status(200).json(adminBDD);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar el administrador", error: error.message });
+  }
+};
+
+// --- Recuperación y actualización de contraseña para Administrador ---
+const recuperarPasswordAdministrador = async (req, res) => {
+  const { email } = req.body;
+  if (Object.values(req.body).includes("")) return res.status(404).json({ msg: "Lo sentimos, debes llenar todos los campos" });
+  const adminBDD = await Administrador.findOne({ email });
+  if (!adminBDD) return res.status(404).json({ msg: "Lo sentimos, el usuario no se encuentra registrado" });
+  const token = adminBDD.crearToken();
+  adminBDD.token = token;
+  await sendMailToRecoveryPassword(email, token);
+  await adminBDD.save();
+  res.status(200).json({ msg: "Revisa tu correo electrónico para reestablecer tu contraseña" });
+};
+
+const comprobarTokenPasswordAdministrador = async (req, res) => {
+  const { token } = req.params;
+  const adminBDD = await Administrador.findOne({ token });
+  if (adminBDD?.token !== req.params.token) return res.status(404).json({ msg: "Lo sentimos, no se puede validar la cuenta" });
+  await adminBDD.save();
+  res.status(200).json({ msg: "Token confirmado, ya puedes crear tu nuevo password" });
+};
+
+const crearNuevoPasswordAdministrador = async (req, res) => {
+  const { password, confirmpassword } = req.body;
+  if (Object.values(req.body).includes("")) return res.status(404).json({ msg: "Lo sentimos, debes llenar todos los campos" });
+  if (password != confirmpassword) return res.status(404).json({ msg: "Lo sentimos, los passwords no coinciden" });
+  const adminBDD = await Administrador.findOne({ token: req.params.token });
+  if (adminBDD?.token !== req.params.token) return res.status(404).json({ msg: "Lo sentimos, no se puede validar la cuenta" });
+  adminBDD.token = null;
+  adminBDD.password = await adminBDD.encrypPassword(password);
+  await adminBDD.save();
+  res.status(200).json({ msg: "Felicitaciones, ya puedes iniciar sesión con tu nuevo password" });
+};
+
+const actualizarPasswordAdministrador = async (req, res) => {
+  const adminBDD = await Administrador.findById(req.administradorBDD._id);
+  if (!adminBDD) return res.status(404).json({ msg: `Lo sentimos, no existe el administrador` });
+  const verificarPassword = await adminBDD.matchPassword(req.body.passwordactual);
+  if (!verificarPassword) return res.status(404).json({ msg: "Lo sentimos, el password actual no es el correcto" });
+  adminBDD.password = await adminBDD.encrypPassword(req.body.passwordnuevo);
+  await adminBDD.save();
+  res.status(200).json({ msg: "Password actualizado correctamente" });
+}
+
+export {
+  registro,
+  login,  
+  perfil
+  ,
+  // CRUD para Estudiante
+  registrarEstudiante,
+  listarEstudiantes,
+  actualizarEstudiante,
+  eliminarEstudiante,
+
+  registroArrendatario
+  ,listarArrendatariosNoConfirmados
+  ,confirmarArrendatarioPorAdmin
+  ,actualizarPasswordAdministrador
+  ,recuperarPasswordAdministrador
+  ,comprobarTokenPasswordAdministrador
+  ,crearNuevoPasswordAdministrador
+  ,actualizarPerfilAdministrador
 }

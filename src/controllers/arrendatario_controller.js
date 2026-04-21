@@ -7,19 +7,31 @@ import mongoose from "mongoose"
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs-extra';
 
+// Crear arrendatario sin autenticación ni token
+const crearArrendatario = async (req, res) => {
+  try {
+    const { nombre, apellido, direccion, celular, email } = req.body;
+    // Validar campos obligatorios
+    if ([nombre, apellido, direccion, celular, email].some(campo => !campo || campo.trim() === "")) {
+      return res.status(400).json({ msg: "Todos los campos son obligatorios" });
+    }
+    // Verificar si el email ya está registrado
+    const existe = await Arrendatario.findOne({ email });
+    if (existe) {
+      return res.status(409).json({ msg: "El email ya está registrado" });
+    }
+    // Crear el arrendatario
+    const nuevoArrendatario = new Arrendatario({ nombre, apellido, direccion, celular, email });
+    await nuevoArrendatario.save();
+    res.status(201).json({ msg: "Arrendatario creado exitosamente", arrendatario: nuevoArrendatario });
+  } catch (error) {
+    console.error("Error al crear arrendatario:", error);
+    res.status(500).json({ msg: "Error al crear arrendatario", error: error.message });
+  }
+};
 
 
 
-
-const confirmarMail = async (req, res) => {
-  if (!(req.params.token)) return res.status(400).json({ msg: "Lo sentimos, no se puede validar la cuenta" })
-  const arrendatarioBDD = await Arrendatario.findOne({ token: req.params.token })
-  if (!arrendatarioBDD?.token) return res.status(404).json({ msg: "La cuenta ya ha sido confirmada" })
-  arrendatarioBDD.token = null
-  arrendatarioBDD.confirmEmail = true
-  await arrendatarioBDD.save()
-  res.status(200).json({ msg: "Token confirmado, ya puedes iniciar sesión" })
-}
 
 const recuperarPassword = async (req, res) => {
   const { email } = req.body
@@ -192,8 +204,7 @@ const listarArrendatarios = async (req, res) => {
 
 
 export {
-  
-  confirmarMail,
+  crearArrendatario,
   recuperarPassword,
   comprobarTokenPasword,
   crearNuevoPassword,
