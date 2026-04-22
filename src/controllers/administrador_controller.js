@@ -1,3 +1,16 @@
+import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
+// Listar todas las quejas/sugerencias
+const listarTodasQuejasSugerencias = async (req, res) => {
+  try {
+    const quejas = await QuejaSugerencias.find()
+      .populate("usuario", "nombre apellido email")
+      .populate("arrendatarioId", "nombre apellido email")
+      .populate("departamento", "titulo direccion");
+    res.status(200).json(quejas);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar quejas/sugerencias", error });
+  }
+};
 
 
 import Administrador from "../models/Administrador.js"
@@ -229,20 +242,19 @@ const actualizarPasswordAdministrador = async (req, res) => {
 export {
   registro,
   login,  
-  perfil
-  ,
+  perfil,
   // CRUD para Estudiante
   registrarEstudiante,
   listarEstudiantes,
   actualizarEstudiante,
   eliminarEstudiante,
-
-  registroArrendatario
-  ,listarArrendatariosNoConfirmados
-  ,confirmarArrendatarioPorAdmin
-  ,actualizarPasswordAdministrador
-  ,recuperarPasswordAdministrador
-  ,comprobarTokenPasswordAdministrador
-  ,crearNuevoPasswordAdministrador
-  ,actualizarPerfilAdministrador
+  registroArrendatario,
+  listarArrendatariosNoConfirmados,
+  confirmarArrendatarioPorAdmin,
+  actualizarPasswordAdministrador,
+  recuperarPasswordAdministrador,
+  comprobarTokenPasswordAdministrador,
+  crearNuevoPasswordAdministrador,
+  actualizarPerfilAdministrador,
+  listarTodasQuejasSugerencias
 }

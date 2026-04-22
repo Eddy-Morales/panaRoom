@@ -1,9 +1,16 @@
 import { Router } from 'express'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
-import {login,perfil, registro, registroArrendatario, listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin, recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador, crearNuevoPasswordAdministrador, actualizarPasswordAdministrador, actualizarPerfilAdministrador} from '../controllers/administrador_controller.js'
+import {login,perfil, registro, registroArrendatario, listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin, recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador, crearNuevoPasswordAdministrador, actualizarPasswordAdministrador, actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
+
 
 const router = Router()
-
+// Ruta para que el administrador vea todas las quejas/sugerencias
+router.get('/administrador/quejas', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede ver esta información' });
+  }
+  return listarTodasQuejasSugerencias(req, res, next);
+});
 router.post('/administrador/registro', registro) // http://localhost:3000/api/registro
 router.post('/loginAd', login)
 router.get('/perfilAd',verificarTokenJWT,perfil)
