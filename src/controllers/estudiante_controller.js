@@ -3,6 +3,8 @@ import { crearTokenJWT } from "../middlewares/JWT.js"
 import Estudiante from "../models/Estudiante.js"
 import mongoose from "mongoose"
 
+import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
+
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js"
 
 
@@ -199,7 +201,40 @@ const eliminarEstudiante = async (req, res) => {
 		res.status(500).json({ msg: "Error al eliminar el estudiante", error: error.message });
 	}
 };
+// Registrar queja o sugerencia de estudiante
+const registrarQuejaSugerenciaEstudiante = async (req, res) => {
+    try {
+        const { descripcion, departamento } = req.body;
+        const estudianteId = req.estudianteBDD?._id;
+        if (!estudianteId) {
+            return res.status(401).json({ msg: "No autenticado" });
+        }
+        if (!descripcion || descripcion.trim() === "") {
+            return res.status(400).json({ msg: "La descripción es obligatoria" });
+        }
+        if (!departamento || !mongoose.Types.ObjectId.isValid(departamento)) {
+            return res.status(400).json({ msg: "El id del departamento es obligatorio y debe ser válido" });
+        }
 
+        // Buscar el departamento y su arrendatario
+        const Departamento = (await import("../models/Departamento.js")).default;
+        const departamentoDoc = await Departamento.findById(departamento);
+        if (!departamentoDoc) {
+            return res.status(404).json({ msg: "Departamento no encontrado" });
+        }
+
+        const nuevaEntrada = new QuejaSugerencias({
+            descripcion,
+            usuario: estudianteId,
+            departamento,
+            arrendatarioId: departamentoDoc.arrendatario || null
+        });
+        await nuevaEntrada.save();
+        res.status(201).json({ msg: "Queja o sugerencia registrada correctamente", data: nuevaEntrada });
+    } catch (error) {
+        res.status(500).json({ msg: "Error al registrar la queja o sugerencia", error: error.message });
+    }
+};
 export {
 	registrarEstudiante,
 	actualizarEstudiante,
@@ -212,4 +247,6 @@ export {
 	crearNuevoPasswordEstudiante,
 	actualizarPasswordEstudiante,
 	actualizarPerfilEstudiante
+    ,registrarQuejaSugerenciaEstudiante
 }
+

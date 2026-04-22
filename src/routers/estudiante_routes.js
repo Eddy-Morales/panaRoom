@@ -17,6 +17,7 @@ import {
 	crearNuevoPasswordEstudiante,
 	actualizarPasswordEstudiante,
 	actualizarPerfilEstudiante
+    ,registrarQuejaSugerenciaEstudiante
 } from '../controllers/estudiante_controller.js'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
 
@@ -82,6 +83,9 @@ router.put('/estudiante/actualizarpassword/:id', verificarTokenJWT, actualizarPa
 
 // Actualizar perfil estudiante (autenticado)
 router.put('/estudiante/perfil/:id', verificarTokenJWT, actualizarPerfilEstudiante)
+
+// Registrar queja o sugerencia (autenticado)
+router.post('/estudiante/queja-sugerencia', verificarTokenJWT, registrarQuejaSugerenciaEstudiante)
 
 
 export default router

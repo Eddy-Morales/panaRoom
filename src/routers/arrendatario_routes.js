@@ -5,18 +5,21 @@ import {
   actualizarPassword,
   actualizarPerfil,
   comprobarTokenPasword,
-  
   crearNuevoPassword,
   login,
   perfil,
   recuperarPassword,
-  listarArrendatarios
+  listarArrendatarios,
+  obtenerQuejasSugerenciasDepartamento
 } from '../controllers/arrendatario_controller.js'
+
 
 import { verificarTokenJWT } from '../middlewares/JWT.js'
 
 const router = Router()
 
+// Obtener quejas y sugerencias del departamento del arrendatario autenticado
+router.get('/arrendatario/comentarios', verificarTokenJWT, obtenerQuejasSugerenciasDepartamento)
 
 // Ruta para crear arrendatario sin autenticación ni token
 router.post('/arrendatario/crear', crearArrendatario)

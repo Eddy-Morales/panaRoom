@@ -1,3 +1,5 @@
+import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
+
 import Arrendatario from "../models/Arrendatario.js"
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js"
 
@@ -7,6 +9,29 @@ import mongoose from "mongoose"
 import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs-extra';
 
+
+// Obtener quejas y sugerencias de un departamento por arrendatario autenticado
+const obtenerQuejasSugerenciasDepartamento = async (req, res) => {
+  try {
+    const arrendatarioId = req.arrendatarioBDD?._id;
+    if (!arrendatarioId) {
+      return res.status(401).json({ msg: "No autenticado" });
+    }
+    // Buscar el departamento asociado a este arrendatario
+    const Departamento = (await import("../models/Departamento.js")).default;
+    const departamento = await Departamento.findOne({ arrendatario: arrendatarioId });
+    if (!departamento) {
+      return res.status(404).json({ msg: "No tienes un departamento registrado" });
+    }
+    // Buscar quejas y sugerencias asociadas a ese departamento
+    const comentarios = await QuejaSugerencias.find({ departamento: departamento._id })
+      .populate("usuario", "nombre apellido email")
+      .sort({ fecha: -1 });
+    res.status(200).json({ departamento: departamento._id, comentarios });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al obtener comentarios", error: error.message });
+  }
+};
 // Crear arrendatario sin autenticación ni token
 const crearArrendatario = async (req, res) => {
   try {
@@ -213,4 +238,5 @@ export {
   actualizarPerfil,
   actualizarPassword,
   listarArrendatarios
+  ,obtenerQuejasSugerenciasDepartamento
 }
