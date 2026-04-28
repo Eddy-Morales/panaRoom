@@ -48,7 +48,7 @@ const crearArrendatario = async (req, res) => {
     // Crear el arrendatario
     const nuevoArrendatario = new Arrendatario({ nombre, apellido, direccion, celular, email });
     await nuevoArrendatario.save();
-    res.status(201).json({ msg: "Arrendatario creado exitosamente", arrendatario: nuevoArrendatario });
+    res.status(201).json({ msg: "Datos enviados exitosamente, el administrador confirmará tu cuenta y sus credenciales seran enviadas a su correo", arrendatario: nuevoArrendatario });
   } catch (error) {
     console.error("Error al crear arrendatario:", error);
     res.status(500).json({ msg: "Error al crear arrendatario", error: error.message });
