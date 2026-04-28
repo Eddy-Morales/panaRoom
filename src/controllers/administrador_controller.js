@@ -41,6 +41,9 @@ const confirmarArrendatarioPorAdmin = async (req, res) => {
     if (!arrendatario) {
       return res.status(404).json({ msg: "Arrendatario no encontrado" });
     }
+    if (arrendatario.confirmEmail) {
+      return res.status(200).json({ msg: "El usuario ya está habilitado", arrendatario });
+    }
     arrendatario.confirmEmail = true;
     // Asignar password igual al email y encriptar
     arrendatario.password = await arrendatario.encrypPassword(arrendatario.email);
