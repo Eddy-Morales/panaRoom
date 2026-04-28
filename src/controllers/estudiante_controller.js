@@ -8,6 +8,12 @@ import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js"
 
 
+
+const perfilEstudiante =(req,res)=>{
+		const {password,googleId,token,confirmEmail,createdAt,updatedAt,__v,...datosPerfil} = req.estudianteBDD
+	res.status(200).json(datosPerfil)
+}
+
 // --- Recuperación y actualización de contraseña  ---
 const confirmarMailEstudiante = async (req, res) => {
     try {
@@ -236,6 +242,7 @@ const registrarQuejaSugerenciaEstudiante = async (req, res) => {
     }
 };
 export {
+	perfilEstudiante,
 	registrarEstudiante,
 	actualizarEstudiante,
 	eliminarEstudiante,

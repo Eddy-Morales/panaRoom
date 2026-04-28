@@ -16,10 +16,11 @@ const departamentoSchema = new Schema({
     required: true,
     trim: true
   },
-  ciudad: {
+  categoria: {
     type: String,
-    required: true,
-    trim: true
+    enum: ['suit', 'departamento'],
+    default: 'departamento',
+    required: true
   },
   precioMensual: {
     type: Number,
@@ -44,6 +45,20 @@ const departamentoSchema = new Schema({
     type: [String], // Ejemplo: ['Agua', 'Luz', 'Internet']
     default: []
   },
+  alicuota: {
+    type: Boolean,
+    default: false
+  },
+  alicoutaMonto: {
+    type: Number,
+    default: null
+  },
+  mascotas: {
+    type: Boolean,
+    default: false,
+    required: true
+
+  },
   urlMapa: {
     type: String,
     trim: true,
@@ -65,6 +80,10 @@ const departamentoSchema = new Schema({
   parqueadero: {
     type: Boolean,
     default: false // o true, según prefieras el valor por defecto
+  },
+  numParqueaderos: {
+    type: Number,
+    default: 0 
   }
 }, {
   timestamps: true

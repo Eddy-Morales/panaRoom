@@ -7,6 +7,7 @@ import {
 	eliminarEstudiante as eliminarEstudianteAdmin
 } from '../controllers/administrador_controller.js'
 import {
+	perfilEstudiante,
 	registrarEstudiante,
 	actualizarEstudiante,
 	eliminarEstudiante,
@@ -30,6 +31,10 @@ const router = Router()
 
 // Login estudiante
 router.post('/loginEstudiante', loginEstudiante)
+
+router.get('/perfilEstudiante', verificarTokenJWT, perfilEstudiante)
+
+
 // Registrar estudiante (token solo si es admin)
 router.post('/registroEstudiante', (req, res, next) => {
 	// Si hay token y es admin, usar controlador admin

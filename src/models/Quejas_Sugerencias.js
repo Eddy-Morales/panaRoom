@@ -22,6 +22,10 @@ const QuejaSugerenciasSchema = new mongoose.Schema({
     ref: "Departamento",
     required: true
   },
+  estado: {
+    type: Boolean,
+    default: false
+  },
   fecha: {
     type: Date,
     default: Date.now

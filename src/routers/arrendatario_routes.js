@@ -9,7 +9,7 @@ import {
   login,
   perfil,
   recuperarPassword,
-  listarArrendatarios,
+  
   obtenerQuejasSugerenciasDepartamento
 } from '../controllers/arrendatario_controller.js'
 
@@ -32,7 +32,7 @@ router.post('/arrendatario/login', login)
 router.get('/arrendatario/perfil',verificarTokenJWT,perfil)
 router.put('/arrendatario/:id',verificarTokenJWT,actualizarPerfil)
 router.put('/arrendatario/actualizarpassword/:id',verificarTokenJWT,actualizarPassword)
-router.get("/arrendatarios",verificarTokenJWT,listarArrendatarios)
+
 
 
 router.get("/auth/google", passport.authenticate("google", {

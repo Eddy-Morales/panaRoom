@@ -216,16 +216,7 @@ const actualizarPassword = async (req,res)=>{
     await arrendatarioBDD.save()
     res.status(200).json({msg:"Password actualizado correctamente"})
 }
-const listarArrendatarios = async (req, res) => {
-    try {
-        const arrendatarios = await Arrendatario.find()
-            .select("-createdAt -updatedAt -__v"); // Excluye campos internos
 
-        res.status(200).json(arrendatarios);
-    } catch (error) {
-        res.status(500).json({ mensaje: "Error al listar arrendatarios", error });
-    }
-};
 
 
 export {
@@ -236,7 +227,7 @@ export {
   login,
   perfil,
   actualizarPerfil,
-  actualizarPassword,
-  listarArrendatarios
+  actualizarPassword
+  
   ,obtenerQuejasSugerenciasDepartamento
 }

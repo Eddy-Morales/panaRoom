@@ -35,7 +35,8 @@ const arrendatarioSchema = new Schema({
   trim: true
 },
 password: {
-  type: String
+  type: String,
+  default: null
 },
   status: {
     type: Boolean,

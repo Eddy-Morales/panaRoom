@@ -33,20 +33,24 @@ const asignarEstudianteADepartamento = async (req, res) => {
 
 const registrarDepartamento = async (req, res) => {
   try {
-    const { arrendatario } = req.body;
+    const { arrendatario, alicuota, alicoutaMonto, parqueadero, numParqueaderos } = req.body;
 
-    // Validación básica
+    // Validación básica de arrendatario
     if (!mongoose.Types.ObjectId.isValid(arrendatario)) {
       return res.status(400).json({ msg: "El ID del arrendatario no es válido." });
     }
 
-    if (Object.values(req.body).includes("")) {
-      return res.status(400).json({ msg: "Todos los campos son obligatorios." });
+    // Validación de campos obligatorios (ajusta según tus requeridos)
+    const camposObligatorios = ['titulo', 'descripcion', 'direccion', 'ciudad', 'precioMensual', 'numeroHabitaciones', 'numeroBanos', 'categoria'];
+    for (const campo of camposObligatorios) {
+      if (!req.body[campo] || req.body[campo] === "") {
+        return res.status(400).json({ msg: `El campo ${campo} es obligatorio.` });
+      }
     }
 
     const imagenesSubidas = [];
 
-    // 📷 Subida de imágenes desde dispositivo
+    // Subida de imágenes
     if (req.files?.imagenes) {
       const archivos = Array.isArray(req.files.imagenes)
         ? req.files.imagenes
@@ -57,9 +61,24 @@ const registrarDepartamento = async (req, res) => {
           archivo.tempFilePath,
           { folder: "Departamentos" }
         );
-
         imagenesSubidas.push({ url: secure_url, public_id });
         await fs.unlink(archivo.tempFilePath);
+      }
+    }
+
+    // Validación de alicuota y alicoutaMonto
+    const alicuotaBool = alicuota === true || alicuota === 'true';
+    if (alicuotaBool) {
+      if (!alicoutaMonto || isNaN(alicoutaMonto)) {
+        return res.status(400).json({ msg: "Debe ingresar el monto de la alícuota si escogió la opción de alícuota." });
+      }
+    }
+
+    // Validación de parqueadero y numParqueaderos
+    const parqueaderoBool = parqueadero === true || parqueadero === 'true';
+    if (parqueaderoBool) {
+      if (!numParqueaderos || isNaN(numParqueaderos) || Number(numParqueaderos) < 1) {
+        return res.status(400).json({ msg: "Debe ingresar el número de parqueaderos si escogió la opción de parqueadero." });
       }
     }
 

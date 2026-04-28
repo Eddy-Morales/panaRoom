@@ -239,10 +239,20 @@ const actualizarPasswordAdministrador = async (req, res) => {
   res.status(200).json({ msg: "Password actualizado correctamente" });
 }
 
+const listarArrendatarios = async (req, res) => {
+  try {
+    const arrendatarios = await Arrendatario.find().select("-password -token -__v -createdAt -updatedAt");
+    res.status(200).json(arrendatarios);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar arrendatarios", error: error.message });
+  }
+};
+
 export {
   registro,
   login,  
   perfil,
+  listarArrendatarios,
   // CRUD para Estudiante
   registrarEstudiante,
   listarEstudiantes,
