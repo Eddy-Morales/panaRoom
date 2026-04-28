@@ -41,18 +41,30 @@ const confirmarArrendatarioPorAdmin = async (req, res) => {
     if (!arrendatario) {
       return res.status(404).json({ msg: "Arrendatario no encontrado" });
     }
+    if (arrendatario.confirmEmail) {
+      return res.status(200).json({ msg: "El usuario ya está habilitado", arrendatario });
+    }
     arrendatario.confirmEmail = true;
     // Asignar password igual al email y encriptar
     arrendatario.password = await arrendatario.encrypPassword(arrendatario.email);
     await arrendatario.save();
-    // Enviar correo de bienvenida con email y password
-    await sendWelcomeMailArrendatario(arrendatario.email, arrendatario.nombre || arrendatario.email, arrendatario.email);
+
+    // Responde primero al cliente
     res.status(200).json({ msg: "Arrendatario confirmado correctamente y credenciales enviadas", arrendatario });
+
+    // Luego intenta enviar el correo en segundo plano
+    sendWelcomeMailArrendatario(
+      arrendatario.email,
+      arrendatario.nombre || arrendatario.email,
+      arrendatario.email
+    ).catch(mailError => {
+      console.error("Error enviando correo de bienvenida:", mailError);
+    });
+
   } catch (error) {
     res.status(500).json({ msg: "Error al confirmar arrendatario", error: error.message });
   }
 };
-
 const registro = async (req, res) => {
   const { email, password } = req.body
   if (Object.values(req.body).includes("")) return res.status(400).json({ msg: "todos los campos son obligatorios" })
