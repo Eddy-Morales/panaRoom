@@ -25,7 +25,7 @@ const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
         html: `
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
             <h1 style="text-align:center; color:#2F8F9D;">🏡 Pana Room - Bienvenido</h1>
-            <p style="font-size:16px; text-align:center;">¡Hola <b>${usuario}</b>! Tu cuenta ha sido creada exitosamente.</p>
+            <p style="font-size:16px; text-align:center;">¡Hola <b>${usuario}</b>! Tu cuenta ha sido creada exitosamente. ya puedes iniciar sesión.</p>
             <p style="font-size:16px; text-align:center;">Aquí tienes tus credenciales de acceso:</p>
             <div style="text-align:center; margin: 20px 0;">
                 <table style="margin: 0 auto; font-size:16px;">
