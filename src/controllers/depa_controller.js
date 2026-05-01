@@ -4,6 +4,8 @@ import { v2 as cloudinary } from 'cloudinary';
 import fs from 'fs-extra';
 import mongoose from 'mongoose';
 import { Stripe } from "stripe"
+import Arrendatario from "../models/Arrendatario.js";
+
 
 const stripe = new Stripe(`${process.env.STRIPE_PRIVATE_KEY}`);
 
@@ -127,7 +129,8 @@ const verDepartamentoPorId = async (req, res) => {
   }
 
   try {
-    const departamento = await Departamento.findById(id);
+    // Popula la información del arrendatario
+    const departamento = await Departamento.findById(id).populate('arrendatario');
 
     if (!departamento) {
       return res.status(404).json({ msg: "Departamento no encontrado." });

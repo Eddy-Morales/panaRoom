@@ -10,6 +10,9 @@ import routerDepartamentos from './routers/depa_routes.js'
 import routerEstudiantes from './routers/estudiante_routes.js'
 import routerInvitado from './routers/invitado_routes.js'
 
+import connection from './database.js';
+
+
 import cloudinary from 'cloudinary'
 import fileUpload from "express-fileupload"
 
@@ -51,9 +54,14 @@ app.use(express.json())
 
 
 // Ruta base
-app.get('/', (req, res) => {
-  res.send("Server on")
-})
+app.get('/', async (req, res) => {
+  try {
+    await connection(); // Intenta conectar a la base de datos
+    res.send("Server on - Conexión a MongoDB exitosa");
+  } catch (error) {
+    res.status(500).send("Server on - Error de conexión a MongoDB");
+  }
+});
 
 // Rutas para arrendatarios
 app.use('/api', routerArrendatarios) // http://localhost:3000/api

@@ -1,4 +1,36 @@
 import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
+
+
+
+import Administrador from "../models/Administrador.js"
+import Estudiante from "../models/Estudiante.js"
+import Arrendatario from "../models/Arrendatario.js"
+import { crearTokenJWT } from "../middlewares/JWT.js"
+import mongoose from "mongoose"
+import { sendMailToRegister, sendMailToRecoveryPassword, sendWelcomeMailArrendatario } from "../config/nodemailer.js"
+
+// Cambiar contraseña de un arrendatario por el administrador
+const cambiarPasswordArrendatario = async (req, res) => {
+  try {
+    const { id } = req.params; // ID del arrendatario
+    const { password } = req.body;
+    if (!password) {
+      return res.status(400).json({ msg: "El campo password es obligatorio" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de arrendatario no válido" });
+    }
+    const arrendatario = await Arrendatario.findById(id);
+    if (!arrendatario) {
+      return res.status(404).json({ msg: "Arrendatario no encontrado" });
+    }
+    arrendatario.password = await arrendatario.encrypPassword(password);
+    await arrendatario.save();
+    res.status(200).json({ msg: "Contraseña actualizada correctamente" });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar la contraseña", error: error.message });
+  }
+};
 // Listar todas las quejas/sugerencias
 const listarTodasQuejasSugerencias = async (req, res) => {
   try {
@@ -11,14 +43,6 @@ const listarTodasQuejasSugerencias = async (req, res) => {
     res.status(500).json({ msg: "Error al listar quejas/sugerencias", error });
   }
 };
-
-
-import Administrador from "../models/Administrador.js"
-import Estudiante from "../models/Estudiante.js"
-import Arrendatario from "../models/Arrendatario.js"
-import { crearTokenJWT } from "../middlewares/JWT.js"
-import mongoose from "mongoose"
-import { sendMailToRegister, sendMailToRecoveryPassword, sendWelcomeMailArrendatario } from "../config/nodemailer.js"
 
 // Listar arrendatarios con confirmEmail en false
 const listarArrendatariosNoConfirmados = async (req, res) => {
@@ -278,5 +302,6 @@ export {
   comprobarTokenPasswordAdministrador,
   crearNuevoPasswordAdministrador,
   actualizarPerfilAdministrador,
-  listarTodasQuejasSugerencias
+  listarTodasQuejasSugerencias,
+  cambiarPasswordArrendatario
 }

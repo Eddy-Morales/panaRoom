@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
-import {login,perfil, registro, listarArrendatarios, listarEstudiantes ,registroArrendatario, listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin, recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador, crearNuevoPasswordAdministrador, actualizarPasswordAdministrador, actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
+import {login,perfil, registro, cambiarPasswordArrendatario, listarArrendatarios, listarEstudiantes ,registroArrendatario, listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin, recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador, crearNuevoPasswordAdministrador, actualizarPasswordAdministrador, actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
 
 
 const router = Router()
@@ -61,6 +61,14 @@ router.get('/administrador/listarEstudiantes', verificarTokenJWT, (req, res, nex
   }
   return listarEstudiantes(req, res, next);
 });
+
+router.put('/administrador/cambiarpassword/:id', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
+  }
+  return cambiarPasswordArrendatario(req, res, next);
+});
+
 export default router
 
 

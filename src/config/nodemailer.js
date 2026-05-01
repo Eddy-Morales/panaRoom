@@ -25,7 +25,7 @@ const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
         html: `
         <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
             <h1 style="text-align:center; color:#2F8F9D;">🏡 Pana Room - Bienvenido</h1>
-            <p style="font-size:16px; text-align:center;">¡Hola <b>${usuario}</b>! Tu cuenta ha sido creada exitosamente. ya puedes iniciar sesión.</p>
+            <p style="font-size:16px; text-align:center;">¡Hola <b>${usuario}</b>! Tu cuenta ha sido creada exitosamente.</p>
             <p style="font-size:16px; text-align:center;">Aquí tienes tus credenciales de acceso:</p>
             <div style="text-align:center; margin: 20px 0;">
                 <table style="margin: 0 auto; font-size:16px;">
@@ -44,7 +44,7 @@ const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
     console.log("Correo de bienvenida enviado satisfactoriamente:", info.messageId);
 };
 
-const sendMailToRegister = (userMail, token) => {
+const sendMailToRegister = async (userMail, token) => {
     let mailOptions = {
         from: process.env.USER_MAILTRAP,
         to: userMail,
@@ -69,13 +69,12 @@ const sendMailToRegister = (userMail, token) => {
         `
     };
 
-    transporter.sendMail(mailOptions, function(error, info) {
-        if (error) {
-            console.error("Error al enviar el correo de registro:", error);
-        } else {
-            console.log("Correo de registro enviado satisfactoriamente:", info.messageId);
-        }
-    });
+    try {
+        let info = await transporter.sendMail(mailOptions);
+        console.log("Correo de registro enviado satisfactoriamente:", info.messageId);
+    } catch (error) {
+        console.error("Error al enviar el correo de registro:", error);
+    }
 };
 
 const sendMailToRecoveryPassword = async (userMail, token) => {
@@ -110,5 +109,5 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
 export {
     sendMailToRegister,
     sendMailToRecoveryPassword
-    ,sendWelcomeMailArrendatario
+    , sendWelcomeMailArrendatario
 }
