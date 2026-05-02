@@ -1,6 +1,12 @@
 import { Router } from 'express'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
-import {login,perfil, registro, cambiarPasswordArrendatario, listarArrendatarios, listarEstudiantes ,registroArrendatario, listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin, recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador, crearNuevoPasswordAdministrador, actualizarPasswordAdministrador, actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
+import {login,perfil, registro, cambiarPasswordArrendatario,
+  cambiarDisponibilidadDepartamento, 
+  listarArrendatarios, listarEstudiantes ,registroArrendatario,
+   listarArrendatariosNoConfirmados, confirmarArrendatarioPorAdmin,
+    recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador,
+     crearNuevoPasswordAdministrador, actualizarPasswordAdministrador,
+      actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
 
 
 const router = Router()
@@ -67,6 +73,13 @@ router.put('/administrador/cambiarpassword/:id', verificarTokenJWT, (req, res, n
     return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
   }
   return cambiarPasswordArrendatario(req, res, next);
+});
+
+router.put('/administrador/cambiarDisponibilidad/:idDepartamento', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
+  }
+  return cambiarDisponibilidadDepartamento(req, res, next);
 });
 
 export default router

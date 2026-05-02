@@ -1,4 +1,6 @@
 import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
+import Departamento from "../models/Departamento.js";
+
 
 import Arrendatario from "../models/Arrendatario.js"
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js"
@@ -217,7 +219,37 @@ const actualizarPassword = async (req,res)=>{
     res.status(200).json({msg:"Password actualizado correctamente"})
 }
 
+const cambiarDisponibilidadDepartamentoArrendatario = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { disponible } = req.body; // true o false
 
+    if (typeof disponible !== "boolean") {
+      return res.status(400).json({ msg: "El campo 'disponible' debe ser booleano (true o false)" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de departamento no válido" });
+    }
+
+    // Solo puede modificar departamentos donde él es el arrendatario
+    const departamento = await Departamento.findOne({
+      _id: id,
+      arrendatario: req.arrendatarioBDD._id // Ajusta el campo si tu modelo usa otro nombre
+    });
+
+    if (!departamento) {
+      return res.status(404).json({ msg: "Departamento no encontrado o no tienes permisos para modificarlo" });
+    }
+
+    departamento.disponible = disponible;
+    await departamento.save();
+
+    res.status(200).json({ msg: "Disponibilidad actualizada correctamente", departamento });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar la disponibilidad", error: error.message });
+  }
+};
 
 export {
   crearArrendatario,
@@ -227,7 +259,8 @@ export {
   login,
   perfil,
   actualizarPerfil,
-  actualizarPassword
+  actualizarPassword,
+  cambiarDisponibilidadDepartamentoArrendatario
   
   ,obtenerQuejasSugerenciasDepartamento
 }

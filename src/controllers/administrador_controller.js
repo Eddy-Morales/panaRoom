@@ -5,6 +5,8 @@ import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
 import Administrador from "../models/Administrador.js"
 import Estudiante from "../models/Estudiante.js"
 import Arrendatario from "../models/Arrendatario.js"
+import Departamento from "../models/Departamento.js";
+
 import { crearTokenJWT } from "../middlewares/JWT.js"
 import mongoose from "mongoose"
 import { sendMailToRegister, sendMailToRecoveryPassword, sendWelcomeMailArrendatario } from "../config/nodemailer.js"
@@ -284,6 +286,33 @@ const listarArrendatarios = async (req, res) => {
   }
 };
 
+const cambiarDisponibilidadDepartamento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { disponible } = req.body; // true o false
+
+    if (typeof disponible !== "boolean") {
+      return res.status(400).json({ msg: "El campo 'disponible' debe ser booleano (true o false)" });
+    }
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de departamento no válido" });
+    }
+
+    const departamento = await Departamento.findById(id);
+    if (!departamento) {
+      return res.status(404).json({ msg: "Departamento no encontrado" });
+    }
+
+    departamento.disponible = disponible;
+    await departamento.save();
+
+    res.status(200).json({ msg: "Disponibilidad actualizada correctamente", departamento });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar la disponibilidad", error: error.message });
+  }
+};
+
 export {
   registro,
   login,  
@@ -303,5 +332,6 @@ export {
   crearNuevoPasswordAdministrador,
   actualizarPerfilAdministrador,
   listarTodasQuejasSugerencias,
-  cambiarPasswordArrendatario
+  cambiarPasswordArrendatario,
+  cambiarDisponibilidadDepartamento
 }
