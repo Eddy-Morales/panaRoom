@@ -1,6 +1,7 @@
 import {Router} from 'express'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
-import { registrarDepartamento,listarDepartamento,eliminarDepa,verDepartamentoPorId, pagarDepartamento, asignarEstudianteADepartamento } from '../controllers/depa_controller.js'
+import { registrarDepartamento,listarDepartamento,eliminarDepa,
+    verDepartamentoPorId, pagarDepartamento, asignarEstudianteADepartamento, quitarEstudianteDeDepartamento } from '../controllers/depa_controller.js'
 
 
 
@@ -13,6 +14,7 @@ router.get('/departamentos', verificarTokenJWT, listarDepartamento)
 router.delete('/departamento/eliminar/:id',verificarTokenJWT,eliminarDepa)
 router.post('/departamento/pago',verificarTokenJWT,pagarDepartamento)
 router.get("/departamento/:id",verificarTokenJWT, verDepartamentoPorId);
+router.put('/departamento/quitarEstudiante', verificarTokenJWT, quitarEstudianteDeDepartamento)
 
 
 export default router

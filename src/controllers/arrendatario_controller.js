@@ -250,7 +250,14 @@ const cambiarDisponibilidadDepartamentoArrendatario = async (req, res) => {
     res.status(500).json({ msg: "Error al actualizar la disponibilidad", error: error.message });
   }
 };
-
+const listarArrendatarios = async (req, res) => {
+  try {
+    const arrendatarios = await Arrendatario.find().select("-password -token -__v -createdAt -updatedAt");
+    res.status(200).json(arrendatarios);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar arrendatarios", error: error.message });
+  }
+};
 export {
   crearArrendatario,
   recuperarPassword,
@@ -262,5 +269,6 @@ export {
   actualizarPassword,
   cambiarDisponibilidadDepartamentoArrendatario
   
-  ,obtenerQuejasSugerenciasDepartamento
+  ,obtenerQuejasSugerenciasDepartamento,
+  listarArrendatarios
 }

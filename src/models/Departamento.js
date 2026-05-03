@@ -72,6 +72,11 @@ const departamentoSchema = new Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Arrendatario' // O 'Propietario', según tu modelo
   },
+  referencia: {
+    type: String,
+    trim: true,
+    default: null
+  },
   estudiante: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Estudiante',

@@ -186,6 +186,26 @@ const pagarDepartamento = async (req, res) => {
   }
 };
 
+const quitarEstudianteDeDepartamento = async (req, res) => {
+  const { departamentoId } = req.body;
+  if (!mongoose.Types.ObjectId.isValid(departamentoId)) {
+    return res.status(400).json({ msg: "ID de departamento no válido" });
+  }
+  try {
+    const departamento = await Departamento.findById(departamentoId);
+    if (!departamento) {
+      return res.status(404).json({ msg: "Departamento no encontrado" });
+    }
+    if (!departamento.estudiante) {
+      return res.status(400).json({ msg: "El departamento no tiene un estudiante asignado" });
+    }
+    departamento.estudiante = null;
+    await departamento.save();
+    res.status(200).json({ msg: "Estudiante removido del departamento correctamente", departamento });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al quitar estudiante", error: error.message });
+  }
+};
 
 export {
 
@@ -194,5 +214,6 @@ export {
     eliminarDepa,
     verDepartamentoPorId,
     pagarDepartamento,
-    asignarEstudianteADepartamento
+    asignarEstudianteADepartamento,
+    quitarEstudianteDeDepartamento
   }

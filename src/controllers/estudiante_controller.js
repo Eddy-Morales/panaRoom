@@ -241,11 +241,45 @@ const registrarQuejaSugerenciaEstudiante = async (req, res) => {
         res.status(500).json({ msg: "Error al registrar la queja o sugerencia", error: error.message });
     }
 };
+
+const listarDepartamentosEstudiante = async (req, res) => {
+  try {
+    const estudianteId = req.estudianteBDD?._id;
+    if (!estudianteId) {
+      return res.status(401).json({ msg: "No autenticado" });
+    }
+
+    const Departamento = (await import("../models/Departamento.js")).default;
+    const departamentos = await Departamento.find({ estudiante: estudianteId });
+
+    res.status(200).json(departamentos);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar departamentos", error: error.message });
+  }
+};
+
+const listarQuejasEstudiante = async (req, res) => {
+  try {
+    const estudianteId = req.estudianteBDD?._id;
+    if (!estudianteId) {
+      return res.status(401).json({ msg: "No autenticado" });
+    }
+
+    const quejas = await QuejaSugerencias.find({ usuario: estudianteId })
+      .populate("departamento", "titulo direccion")
+      .populate("arrendatarioId", "nombre apellido email");
+
+    res.status(200).json(quejas);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar las quejas/sugerencias", error: error.message });
+  }
+};
 export {
 	perfilEstudiante,
 	registrarEstudiante,
 	actualizarEstudiante,
 	eliminarEstudiante,
+	listarDepartamentosEstudiante,
 	loginEstudiante,
 	// nuevas funciones
 	confirmarMailEstudiante,
@@ -254,6 +288,7 @@ export {
 	crearNuevoPasswordEstudiante,
 	actualizarPasswordEstudiante,
 	actualizarPerfilEstudiante
-    ,registrarQuejaSugerenciaEstudiante
+    ,registrarQuejaSugerenciaEstudiante,
+	listarQuejasEstudiante
 }
 
