@@ -314,7 +314,8 @@ const cambiarDisponibilidadDepartamento = async (req, res) => {
 };
 const cambiarEstadoQuejaSugerencia = async (req, res) => {
   try {
-    const { id } = req.params;
+    // Permite recibir el id por params o por body
+    const id = req.params.id || req.body.id;
     const { estado } = req.body; // true o false
 
     if (typeof estado !== "boolean") {

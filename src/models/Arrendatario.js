@@ -53,7 +53,11 @@ password: {
   rol: {
     type: String,
     default: "arrendatario"
-  }
+  },
+  imagenesDocumentos: [{
+    url: { type: String, required: true },
+    public_id: { type: String, required: true }
+  }]
 }, { timestamps: true })
 
 arrendatarioSchema.methods.encrypPassword = async function (password) {

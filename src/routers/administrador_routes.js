@@ -83,12 +83,7 @@ router.put('/administrador/cambiarDisponibilidad/:idDepartamento', verificarToke
   return cambiarDisponibilidadDepartamento(req, res, next);
 });
 
-router.put('/admin/quejaSugerencia/estado/:id', verificarTokenJWT, (req, res, next) => {
-  if (!req.administradorBDD) {
-    return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
-  }
-  return cambiarEstadoQuejaSugerencia(req, res, next);
-});
+router.put('/quejaSugerencia/estado', verificarTokenJWT, cambiarEstadoQuejaSugerencia);
 
 
 export default router
