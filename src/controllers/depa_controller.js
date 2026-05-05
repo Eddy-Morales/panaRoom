@@ -206,6 +206,32 @@ const quitarEstudianteDeDepartamento = async (req, res) => {
     res.status(500).json({ msg: "Error al quitar estudiante", error: error.message });
   }
 };
+// Cambiar el estado de disponibilidad de un departamento (solo por ID)
+const cambiarDisponibilidadDepartamento = async (req, res) => {
+  try {
+    const { departamentoId } = req.body; // o req.params, según la ruta que definas
+    const { disponible } = req.body; // true o false
+
+    if (!mongoose.Types.ObjectId.isValid(departamentoId)) {
+      return res.status(400).json({ msg: "ID de departamento no válido" });
+    }
+    if (typeof disponible !== "boolean") {
+      return res.status(400).json({ msg: "El campo 'disponible' debe ser booleano (true o false)" });
+    }
+
+    const departamento = await Departamento.findById(departamentoId);
+    if (!departamento) {
+      return res.status(404).json({ msg: "Departamento no encontrado" });
+    }
+
+    departamento.disponible = disponible;
+    await departamento.save();
+
+    res.status(200).json({ msg: "Disponibilidad actualizada correctamente", departamento });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar la disponibilidad", error: error.message });
+  }
+};
 
 export {
 
@@ -215,5 +241,6 @@ export {
     verDepartamentoPorId,
     pagarDepartamento,
     asignarEstudianteADepartamento,
-    quitarEstudianteDeDepartamento
+    quitarEstudianteDeDepartamento,
+    cambiarDisponibilidadDepartamento
   }

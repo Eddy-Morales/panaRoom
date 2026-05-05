@@ -221,20 +221,20 @@ const actualizarPassword = async (req,res)=>{
 
 const cambiarDisponibilidadDepartamentoArrendatario = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { idDepartamento } = req.params;
     const { disponible } = req.body; // true o false
 
     if (typeof disponible !== "boolean") {
       return res.status(400).json({ msg: "El campo 'disponible' debe ser booleano (true o false)" });
     }
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
+    if (!mongoose.Types.ObjectId.isValid(idDepartamento)) {
       return res.status(400).json({ msg: "ID de departamento no válido" });
     }
 
     // Solo puede modificar departamentos donde él es el arrendatario
     const departamento = await Departamento.findOne({
-      _id: id,
+      _id: idDepartamento,
       arrendatario: req.arrendatarioBDD._id // Ajusta el campo si tu modelo usa otro nombre
     });
 

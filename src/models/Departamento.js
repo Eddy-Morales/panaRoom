@@ -82,6 +82,10 @@ const departamentoSchema = new Schema({
     ref: 'Estudiante',
     default: null
   },
+   bodega : {
+    type: Boolean,
+    default: false
+  },
   parqueadero: {
     type: Boolean,
     default: false // o true, según prefieras el valor por defecto
@@ -90,6 +94,9 @@ const departamentoSchema = new Schema({
     type: Number,
     default: 0 
   }
+
+
+  
 }, {
   timestamps: true
 });
