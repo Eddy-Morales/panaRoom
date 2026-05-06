@@ -43,7 +43,7 @@ const registrarDepartamento = async (req, res) => {
     }
 
     // Validación de campos obligatorios (ajusta según tus requeridos)
-    const camposObligatorios = ['titulo', 'descripcion', 'direccion', 'ciudad', 'precioMensual', 'numeroHabitaciones', 'numeroBanos', 'categoria'];
+    const camposObligatorios = ['titulo', 'descripcion', 'direccion', 'precioMensual', 'numeroHabitaciones', 'numeroBanos', 'categoria'];
     for (const campo of camposObligatorios) {
       if (!req.body[campo] || req.body[campo] === "") {
         return res.status(400).json({ msg: `El campo ${campo} es obligatorio.` });
