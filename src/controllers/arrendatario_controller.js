@@ -37,6 +37,8 @@ const obtenerQuejasSugerenciasDepartamento = async (req, res) => {
 // Crear arrendatario sin autenticación ni token
 const crearArrendatario = async (req, res) => {
   try {
+    console.log("Archivos recibidos en req.files:", req.files);
+    
     const { nombre, apellido, direccion, celular, email } = req.body;
     // Validar campos obligatorios
     if ([nombre, apellido, direccion, celular, email].some(campo => !campo || campo.trim() === "")) {
