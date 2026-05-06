@@ -47,10 +47,38 @@ const crearArrendatario = async (req, res) => {
     if (existe) {
       return res.status(409).json({ msg: "El email ya está registrado" });
     }
-    // Crear el arrendatario
-    const nuevoArrendatario = new Arrendatario({ nombre, apellido, direccion, celular, email });
+
+    // Lógica para subir documentos a Cloudinary
+    const imagenesDocumentos = [];
+    if (req.files?.imagenesDocumentos) {
+      const archivos = Array.isArray(req.files.imagenesDocumentos)
+        ? req.files.imagenesDocumentos
+        : [req.files.imagenesDocumentos];
+
+      for (const archivo of archivos) {
+        const { secure_url, public_id } = await cloudinary.uploader.upload(
+          archivo.tempFilePath,
+          { folder: "DocumentosArrendatario" }
+        );
+        imagenesDocumentos.push({ url: secure_url, public_id });
+        await fs.unlink(archivo.tempFilePath);
+      }
+    }
+
+    // Crear el arrendatario con los documentos
+    const nuevoArrendatario = new Arrendatario({
+      nombre,
+      apellido,
+      direccion,
+      celular,
+      email,
+      imagenesDocumentos
+    });
     await nuevoArrendatario.save();
-    res.status(201).json({ msg: "Datos enviados exitosamente, el administrador confirmará tu cuenta y sus credenciales seran enviadas a su correo", arrendatario: nuevoArrendatario });
+    res.status(201).json({
+      msg: "Datos enviados exitosamente, el administrador confirmará tu cuenta y sus credenciales seran enviadas a su correo",
+      arrendatario: nuevoArrendatario
+    });
   } catch (error) {
     console.error("Error al crear arrendatario:", error);
     res.status(500).json({ msg: "Error al crear arrendatario", error: error.message });
