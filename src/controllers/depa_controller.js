@@ -5,6 +5,8 @@ import fs from 'fs-extra';
 import mongoose from 'mongoose';
 import { Stripe } from "stripe"
 import Arrendatario from "../models/Arrendatario.js";
+import ChatUsuarios from "../models/ChatUsuarios.js";
+
 
 
 const stripe = new Stripe(`${process.env.STRIPE_PRIVATE_KEY}`);
@@ -233,6 +235,40 @@ const cambiarDisponibilidadDepartamento = async (req, res) => {
   }
 };
 
+const registrarMensajeChat = async (req, res) => {
+  try {
+    const { mensaje, remitente, administradorId, arrendatarioId, estudianteId } = req.body;
+
+    // Validación básica
+    if (!mensaje || !remitente) {
+      return res.status(400).json({ msg: "El mensaje y el remitente son obligatorios" });
+    }
+    if (!["administrador", "arrendatario", "estudiante"].includes(remitente)) {
+      return res.status(400).json({ msg: "El remitente debe ser administrador, arrendatario o estudiante" });
+    }
+
+    // Al menos uno de los IDs debe estar presente
+    if (!administradorId && !arrendatarioId && !estudianteId) {
+      return res.status(400).json({ msg: "Debe especificar al menos un ID de usuario" });
+    }
+
+    // Crea el mensaje
+    const nuevoMensaje = new ChatUsuarios({
+      mensaje,
+      remitente,
+      administradorId: administradorId || null,
+      arrendatarioId: arrendatarioId || null,
+      estudianteId: estudianteId || null
+    });
+
+    await nuevoMensaje.save();
+
+    res.status(201).json({ msg: "Mensaje registrado correctamente", chat: nuevoMensaje });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al registrar el mensaje", error: error.message });
+  }
+};
+
 export {
 
     registrarDepartamento,
@@ -242,5 +278,6 @@ export {
     pagarDepartamento,
     asignarEstudianteADepartamento,
     quitarEstudianteDeDepartamento,
-    cambiarDisponibilidadDepartamento
+    cambiarDisponibilidadDepartamento,
+    registrarMensajeChat
   }
