@@ -93,8 +93,11 @@ const departamentoSchema = new Schema({
   numParqueaderos: {
     type: Number,
     default: 0 
-  }
-
+  },
+  guardiania: {
+    type: Boolean,
+    default: false
+  },
 
   
 }, {

@@ -26,6 +26,24 @@ const QuejaSugerenciasSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  
+  
+  comentarioUsuario : {
+    type: String,
+    trim: true,
+    default: null
+  },
+
+  tipoComentario : {
+    type: String,
+    enum: ['comentario', 'queja', 'sugerencia'],
+    default: 'comentario'
+  },
+  calificacion: {
+    type: Number,
+    default: null,
+  },
+
   fecha: {
     type: Date,
     default: Date.now

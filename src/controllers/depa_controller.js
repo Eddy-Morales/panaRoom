@@ -6,6 +6,9 @@ import mongoose from 'mongoose';
 import { Stripe } from "stripe"
 import Arrendatario from "../models/Arrendatario.js";
 import ChatUsuarios from "../models/ChatUsuarios.js";
+import QuejaSugerencias from "../models/Quejas_Sugerencias.js";
+
+import { io } from '../index.js'; // Ajusta la ruta si es necesario
 
 
 
@@ -263,9 +266,58 @@ const registrarMensajeChat = async (req, res) => {
 
     await nuevoMensaje.save();
 
+    // Emitir el mensaje a todos los clientes (puedes filtrar por destinatario si lo deseas)
+    io.emit('nuevo-mensaje-chat', nuevoMensaje);
+
     res.status(201).json({ msg: "Mensaje registrado correctamente", chat: nuevoMensaje });
   } catch (error) {
     res.status(500).json({ msg: "Error al registrar el mensaje", error: error.message });
+  }
+};
+
+// Actualizar comentarioUsuario
+const actualizarComentarioUsuario = async (req, res) => {
+  try {
+    const { id, comentarioUsuario } = req.body;
+    if (!id) {
+      return res.status(400).json({ msg: "El id es obligatorio" });
+    }
+    if (!comentarioUsuario) {
+      return res.status(400).json({ msg: "El comentarioUsuario es obligatorio" });
+    }
+    const queja = await QuejaSugerencias.findById(id);
+    if (!queja) {
+      return res.status(404).json({ msg: "Queja/Sugerencia no encontrada" });
+    }
+    queja.comentarioUsuario = comentarioUsuario;
+    await queja.save();
+    res.status(200).json({ msg: "Comentario actualizado correctamente", queja });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar el comentario", error: error.message });
+  }
+};
+
+
+
+// Actualizar calificacion
+const actualizarCalificacion = async (req, res) => {
+  try {
+    const { id, calificacion } = req.body;
+    if (!id) {
+      return res.status(400).json({ msg: "El id es obligatorio" });
+    }
+    if (typeof calificacion !== "number" || calificacion < 0) {
+      return res.status(400).json({ msg: "La calificación debe ser un número positivo" });
+    }
+    const queja = await QuejaSugerencias.findById(id);
+    if (!queja) {
+      return res.status(404).json({ msg: "Queja/Sugerencia no encontrada" });
+    }
+    queja.calificacion = calificacion;
+    await queja.save();
+    res.status(200).json({ msg: "Calificación actualizada correctamente", queja });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar la calificación", error: error.message });
   }
 };
 
@@ -279,5 +331,8 @@ export {
     asignarEstudianteADepartamento,
     quitarEstudianteDeDepartamento,
     cambiarDisponibilidadDepartamento,
-    registrarMensajeChat
+    registrarMensajeChat,
+    actualizarComentarioUsuario,
+    
+    actualizarCalificacion
   }
