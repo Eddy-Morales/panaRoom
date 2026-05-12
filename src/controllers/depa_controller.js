@@ -320,7 +320,18 @@ const actualizarCalificacion = async (req, res) => {
     res.status(500).json({ msg: "Error al actualizar la calificación", error: error.message });
   }
 };
-
+const listarChats = async (req, res) => {
+  try {
+    const chats = await ChatUsuarios.find()
+      .populate('administradorId', 'nombre apellido email')
+      .populate('arrendatarioId', 'nombre apellido email')
+      .populate('estudianteId', 'nombre apellido email')
+      .sort({ createdAt: 1 }); // Ordena por fecha de creación (opcional)
+    res.status(200).json(chats);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar los chats", error: error.message });
+  }
+};
 export {
 
     registrarDepartamento,
@@ -333,6 +344,6 @@ export {
     cambiarDisponibilidadDepartamento,
     registrarMensajeChat,
     actualizarComentarioUsuario,
-    
+    listarChats,
     actualizarCalificacion
   }

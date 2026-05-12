@@ -210,7 +210,7 @@ const eliminarEstudiante = async (req, res) => {
 // Registrar queja o sugerencia de estudiante
 const registrarQuejaSugerenciaEstudiante = async (req, res) => {
     try {
-        const { descripcion, departamento } = req.body;
+        const { descripcion, departamento, tipoComentario } = req.body;
         const estudianteId = req.estudianteBDD?._id;
         if (!estudianteId) {
             return res.status(401).json({ msg: "No autenticado" });
@@ -220,6 +220,10 @@ const registrarQuejaSugerenciaEstudiante = async (req, res) => {
         }
         if (!departamento || !mongoose.Types.ObjectId.isValid(departamento)) {
             return res.status(400).json({ msg: "El id del departamento es obligatorio y debe ser válido" });
+        }
+        // Validar tipoComentario si viene en el body
+        if (tipoComentario && !["comentario", "queja", "sugerencia"].includes(tipoComentario)) {
+            return res.status(400).json({ msg: "El tipoComentario debe ser 'comentario', 'queja' o 'sugerencia'" });
         }
 
         // Buscar el departamento y su arrendatario
@@ -233,7 +237,8 @@ const registrarQuejaSugerenciaEstudiante = async (req, res) => {
             descripcion,
             usuario: estudianteId,
             departamento,
-            arrendatarioId: departamentoDoc.arrendatario || null
+            arrendatarioId: departamentoDoc.arrendatario || null,
+            tipoComentario // <-- ahora sí se guarda si lo envías
         });
         await nuevaEntrada.save();
         res.status(201).json({ msg: "Queja o sugerencia registrada correctamente", data: nuevaEntrada });
