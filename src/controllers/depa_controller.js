@@ -322,14 +322,131 @@ const actualizarCalificacion = async (req, res) => {
 };
 const listarChats = async (req, res) => {
   try {
-    const chats = await ChatUsuarios.find()
+    // Obtén los IDs desde los query params
+    const { arrendatarioId, estudianteId, administradorId } = req.query;
+
+    // Construye el filtro dinámicamente según los parámetros recibidos
+    let filtro = {};
+
+    // Conversación entre estudiante y arrendatario
+    if (arrendatarioId && estudianteId) {
+      filtro = {
+        $or: [
+          { arrendatarioId, estudianteId },
+          { arrendatarioId, estudianteId }
+        ]
+      };
+    }
+    // Conversación entre arrendatario y administrador
+    else if (arrendatarioId && administradorId) {
+      filtro = {
+        $or: [
+          { arrendatarioId, administradorId },
+          { arrendatarioId, administradorId }
+        ]
+      };
+    }
+    // Conversación entre estudiante y administrador
+    else if (estudianteId && administradorId) {
+      filtro = {
+        $or: [
+          { estudianteId, administradorId },
+          { estudianteId, administradorId }
+        ]
+      };
+    }
+    // Si solo hay un ID, filtra por ese usuario (todos sus mensajes)
+    else if (arrendatarioId) {
+      filtro = { arrendatarioId };
+    } else if (estudianteId) {
+      filtro = { estudianteId };
+    } else if (administradorId) {
+      filtro = { administradorId };
+    }
+
+    const chats = await ChatUsuarios.find(filtro)
       .populate('administradorId', 'nombre apellido email')
       .populate('arrendatarioId', 'nombre apellido email')
       .populate('estudianteId', 'nombre apellido email')
-      .sort({ createdAt: 1 }); // Ordena por fecha de creación (opcional)
+      .sort({ createdAt: 1 });
+
     res.status(200).json(chats);
   } catch (error) {
     res.status(500).json({ msg: "Error al listar los chats", error: error.message });
+  }
+};
+
+
+const listarContactosChat = async (req, res) => {
+  try {
+    const { arrendatarioId, estudianteId, administradorId } = req.query;
+
+    // El usuario debe enviar su propio ID (uno de los tres)
+    let filtro = {};
+    if (arrendatarioId) filtro.arrendatarioId = arrendatarioId;
+    else if (estudianteId) filtro.estudianteId = estudianteId;
+    else if (administradorId) filtro.administradorId = administradorId;
+    else return res.status(400).json({ msg: "Debes enviar tu ID de usuario" });
+
+    // Busca todos los mensajes donde el usuario es remitente o destinatario
+    const chats = await ChatUsuarios.find(filtro)
+      .populate('administradorId', 'nombre apellido email')
+      .populate('arrendatarioId', 'nombre apellido email')
+      .populate('estudianteId', 'nombre apellido email');
+
+    // Extrae los contactos únicos
+    const contactos = new Map();
+    chats.forEach(chat => {
+      // Si el usuario es arrendatario, agrega estudiantes y administradores con los que ha chateado
+      if (arrendatarioId) {
+        if (chat.estudianteId && chat.estudianteId._id.toString() !== arrendatarioId) {
+          contactos.set(chat.estudianteId._id.toString(), {
+            tipo: 'estudiante',
+            ...chat.estudianteId._doc
+          });
+        }
+        if (chat.administradorId && chat.administradorId._id.toString() !== arrendatarioId) {
+          contactos.set(chat.administradorId._id.toString(), {
+            tipo: 'administrador',
+            ...chat.administradorId._doc
+          });
+        }
+      }
+      // Si el usuario es estudiante, agrega arrendatarios y administradores
+      if (estudianteId) {
+        if (chat.arrendatarioId && chat.arrendatarioId._id.toString() !== estudianteId) {
+          contactos.set(chat.arrendatarioId._id.toString(), {
+            tipo: 'arrendatario',
+            ...chat.arrendatarioId._doc
+          });
+        }
+        if (chat.administradorId && chat.administradorId._id.toString() !== estudianteId) {
+          contactos.set(chat.administradorId._id.toString(), {
+            tipo: 'administrador',
+            ...chat.administradorId._doc
+          });
+        }
+      }
+      // Si el usuario es administrador, agrega arrendatarios y estudiantes
+      if (administradorId) {
+        if (chat.arrendatarioId && chat.arrendatarioId._id.toString() !== administradorId) {
+          contactos.set(chat.arrendatarioId._id.toString(), {
+            tipo: 'arrendatario',
+            ...chat.arrendatarioId._doc
+          });
+        }
+        if (chat.estudianteId && chat.estudianteId._id.toString() !== administradorId) {
+          contactos.set(chat.estudianteId._id.toString(), {
+            tipo: 'estudiante',
+            ...chat.estudianteId._doc
+          });
+        }
+      }
+    });
+
+    res.status(200).json(Array.from(contactos.values()));
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar los contactos de chat", error: error.message });
   }
 };
 export {
@@ -345,5 +462,6 @@ export {
     registrarMensajeChat,
     actualizarComentarioUsuario,
     listarChats,
-    actualizarCalificacion
+    actualizarCalificacion,
+    listarContactosChat
   }

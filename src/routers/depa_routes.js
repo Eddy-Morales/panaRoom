@@ -8,7 +8,8 @@ import { registrarDepartamento,listarDepartamento,eliminarDepa,
      registrarMensajeChat,
      actualizarComentarioUsuario,
      listarChats,
-     actualizarCalificacion
+     actualizarCalificacion,
+     listarContactosChat
     } from '../controllers/depa_controller.js'
 
 
@@ -28,5 +29,5 @@ router.post('/chat/mensaje', verificarTokenJWT, registrarMensajeChat)
 router.put('/queja-sugerencia/comentario', verificarTokenJWT, actualizarComentarioUsuario)
 router.get('/listar-chats', verificarTokenJWT, listarChats)
 router.put('/queja-sugerencia/calificacion', verificarTokenJWT, actualizarCalificacion)
-
+router.get('/listar-contactos', verificarTokenJWT, listarContactosChat)
 export default router
