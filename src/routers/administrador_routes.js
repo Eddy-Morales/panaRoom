@@ -7,6 +7,7 @@ import {login,perfil, registro, cambiarPasswordArrendatario,
     recuperarPasswordAdministrador, comprobarTokenPasswordAdministrador,
      crearNuevoPasswordAdministrador, actualizarPasswordAdministrador,
      cambiarEstadoQuejaSugerencia,
+     listarAdministradores,
       actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
 
 
@@ -84,6 +85,7 @@ router.put('/administrador/cambiarDisponibilidad/:idDepartamento', verificarToke
 });
 
 router.put('/quejaSugerencia/estado', verificarTokenJWT, cambiarEstadoQuejaSugerencia);
+router.get('/listarAdministradores', verificarTokenJWT, listarAdministradores);
 
 
 export default router

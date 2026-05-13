@@ -339,6 +339,18 @@ const cambiarEstadoQuejaSugerencia = async (req, res) => {
     res.status(500).json({ msg: "Error al actualizar el estado", error: error.message });
   }
 };
+
+
+const listarAdministradores = async (req, res) => {
+  try {
+    const administradores = await Administrador.find().select("-password -token -__v -createdAt -updatedAt");
+    res.status(200).json(administradores);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar administradores", error: error.message });
+  }
+};
+
+
 export {
   registro,
   login,  
@@ -360,5 +372,6 @@ export {
   listarTodasQuejasSugerencias,
   cambiarPasswordArrendatario,
   cambiarDisponibilidadDepartamento,
-  cambiarEstadoQuejaSugerencia
+  cambiarEstadoQuejaSugerencia,
+  listarAdministradores
 }
