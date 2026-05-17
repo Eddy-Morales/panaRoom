@@ -341,6 +341,39 @@ const cambiarEstadoQuejaSugerencia = async (req, res) => {
 };
 
 
+const cambiarEstadoUsuario = async (req, res) => {
+  try {
+    const { id, tipo, confirmEmail } = req.body; // id: usuario, tipo: 'estudiante' o 'arrendatario'
+
+    if (typeof confirmEmail !== "boolean") {
+      return res.status(400).json({ msg: "El campo 'confirmEmail' debe ser booleano (true o false)" });
+    }
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID no válido" });
+    }
+
+    let usuario;
+    if (tipo === "estudiante") {
+      usuario = await Estudiante.findById(id);
+    } else if (tipo === "arrendatario") {
+      usuario = await Arrendatario.findById(id);
+    } else {
+      return res.status(400).json({ msg: "Tipo de usuario no válido" });
+    }
+
+    if (!usuario) {
+      return res.status(404).json({ msg: "Usuario no encontrado" });
+    }
+
+    usuario.confirmEmail = confirmEmail;
+    await usuario.save();
+
+    res.status(200).json({ msg: "confirmEmail actualizado correctamente", usuario });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar confirmEmail", error: error.message });
+  }
+};
+
 const listarAdministradores = async (req, res) => {
   try {
     const administradores = await Administrador.find().select("-password -token -__v -createdAt -updatedAt");
@@ -373,5 +406,6 @@ export {
   cambiarPasswordArrendatario,
   cambiarDisponibilidadDepartamento,
   cambiarEstadoQuejaSugerencia,
+  cambiarEstadoUsuario,
   listarAdministradores
 }

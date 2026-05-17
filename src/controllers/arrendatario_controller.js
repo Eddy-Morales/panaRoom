@@ -288,6 +288,45 @@ const listarArrendatarios = async (req, res) => {
     res.status(500).json({ msg: "Error al listar arrendatarios", error: error.message });
   }
 };
+
+
+const subirImagenArrendatario = async (req, res) => {
+  try {
+    const arrendatarioId = req.arrendatarioBDD._id;
+    if (!mongoose.Types.ObjectId.isValid(arrendatarioId)) {
+      return res.status(400).json({ msg: "ID de arrendatario no válido" });
+    }
+
+    const arrendatario = await Arrendatario.findById(arrendatarioId);
+    if (!arrendatario) {
+      return res.status(404).json({ msg: "Arrendatario no encontrado" });
+    }
+
+    if (!req.files || !req.files.imagen) {
+      return res.status(400).json({ msg: "No se envió ninguna imagen" });
+    }
+
+    // Si ya hay una imagen anterior, la eliminamos de Cloudinary
+    if (arrendatario.avatarArrenID) {
+      await cloudinary.uploader.destroy(arrendatario.avatarArrenID);
+    }
+
+    // Subir la nueva imagen
+    const resultado = await cloudinary.uploader.upload(req.files.imagen.tempFilePath, {
+      folder: "avataresArrendatario"
+    });
+
+    arrendatario.avatarUrl = resultado.secure_url;
+    arrendatario.avatarArrenID = resultado.public_id;
+
+    await arrendatario.save();
+    await fs.remove(req.files.imagen.tempFilePath);
+
+    res.status(200).json({ msg: "Imagen subida correctamente", arrendatario });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al subir la imagen", error: error.message });
+  }
+};
 export {
   crearArrendatario,
   recuperarPassword,
@@ -300,5 +339,6 @@ export {
   cambiarDisponibilidadDepartamentoArrendatario
   
   ,obtenerQuejasSugerenciasDepartamento,
-  listarArrendatarios
+  listarArrendatarios,
+  subirImagenArrendatario
 }

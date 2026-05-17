@@ -449,6 +449,24 @@ const listarContactosChat = async (req, res) => {
     res.status(500).json({ msg: "Error al listar los contactos de chat", error: error.message });
   }
 };
+
+const listarComentariosDepartamento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de departamento no válido" });
+    }
+
+    const comentarios = await QuejaSugerencias.find({ departamento: id })
+      .populate("usuario", "nombre apellido email")
+      .populate("arrendatarioId", "nombre apellido email")
+      .sort({ fecha: -1 });
+
+    res.status(200).json(comentarios);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar los comentarios", error: error.message });
+  }
+};
 export {
 
     registrarDepartamento,
@@ -463,5 +481,6 @@ export {
     actualizarComentarioUsuario,
     listarChats,
     actualizarCalificacion,
-    listarContactosChat
+    listarContactosChat,
+    listarComentariosDepartamento
   }

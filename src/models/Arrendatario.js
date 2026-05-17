@@ -28,6 +28,15 @@ const arrendatarioSchema = new Schema({
     trim: true,
     unique: true
   },
+
+  avatarUrl: {
+    type: String,
+    default: null
+  },
+  avatarArrenID: {
+    type: String,
+    default: null
+  },
   
   googleId: {
   type: String,

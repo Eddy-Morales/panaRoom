@@ -2,7 +2,8 @@
 import { crearTokenJWT } from "../middlewares/JWT.js"
 import Estudiante from "../models/Estudiante.js"
 import mongoose from "mongoose"
-
+import { v2 as cloudinary } from 'cloudinary';
+import fs from 'fs-extra';
 import QuejaSugerencias from "../models/Quejas_Sugerencias.js"
 
 import { sendMailToRegister, sendMailToRecoveryPassword } from "../config/nodemailer.js"
@@ -279,6 +280,47 @@ const listarQuejasEstudiante = async (req, res) => {
     res.status(500).json({ msg: "Error al listar las quejas/sugerencias", error: error.message });
   }
 };
+
+
+const subirImagenEstudiante = async (req, res) => {
+  try {
+    const estudianteId = req.estudianteBDD._id;
+    if (!mongoose.Types.ObjectId.isValid(estudianteId)) {
+      return res.status(400).json({ msg: "ID de estudiante no válido" });
+    }
+
+    const estudiante = await Estudiante.findById(estudianteId);
+    if (!estudiante) {
+      return res.status(404).json({ msg: "Estudiante no encontrado" });
+    }
+
+    if (!req.files || !req.files.imagen) {
+      return res.status(400).json({ msg: "No se envió ninguna imagen" });
+    }
+
+    // Si ya hay una imagen anterior, la eliminamos de Cloudinary
+    if (estudiante.avatarEstudianteID) {
+      await cloudinary.uploader.destroy(estudiante.avatarEstudianteID);
+    }
+
+    // Subir la nueva imagen
+    const resultado = await cloudinary.uploader.upload(req.files.imagen.tempFilePath, {
+      folder: "avataresEstudiante"
+    });
+
+    estudiante.avatarUrl = resultado.secure_url;
+    estudiante.avatarEstudianteID = resultado.public_id;
+
+    await estudiante.save();
+    await fs.remove(req.files.imagen.tempFilePath);
+
+    res.status(200).json({ msg: "Imagen subida correctamente", estudiante });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al subir la imagen", error: error.message });
+  }
+};
+
+
 export {
 	perfilEstudiante,
 	registrarEstudiante,
@@ -294,6 +336,7 @@ export {
 	actualizarPasswordEstudiante,
 	actualizarPerfilEstudiante
     ,registrarQuejaSugerenciaEstudiante,
-	listarQuejasEstudiante
+	listarQuejasEstudiante,
+	subirImagenEstudiante
 }
 

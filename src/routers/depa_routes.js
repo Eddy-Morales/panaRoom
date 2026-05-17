@@ -9,7 +9,8 @@ import { registrarDepartamento,listarDepartamento,eliminarDepa,
      actualizarComentarioUsuario,
      listarChats,
      actualizarCalificacion,
-     listarContactosChat
+     listarContactosChat,
+    listarComentariosDepartamento
     } from '../controllers/depa_controller.js'
 
 
@@ -30,4 +31,5 @@ router.put('/queja-sugerencia/comentario', verificarTokenJWT, actualizarComentar
 router.get('/listar-chats', verificarTokenJWT, listarChats)
 router.put('/queja-sugerencia/calificacion', verificarTokenJWT, actualizarCalificacion)
 router.get('/listar-contactos', verificarTokenJWT, listarContactosChat)
+router.get('/departamento/comentarios/:id', verificarTokenJWT, listarComentariosDepartamento)
 export default router

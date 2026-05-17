@@ -8,6 +8,7 @@ import {login,perfil, registro, cambiarPasswordArrendatario,
      crearNuevoPasswordAdministrador, actualizarPasswordAdministrador,
      cambiarEstadoQuejaSugerencia,
      listarAdministradores,
+     cambiarEstadoUsuario,
       actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
 
 
@@ -87,6 +88,12 @@ router.put('/administrador/cambiarDisponibilidad/:idDepartamento', verificarToke
 router.put('/quejaSugerencia/estado', verificarTokenJWT, cambiarEstadoQuejaSugerencia);
 router.get('/listarAdministradores', verificarTokenJWT, listarAdministradores);
 
+router.put('/administrador/estadoUsuario', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
+  }
+  return cambiarEstadoUsuario(req, res, next);
+});
 
 export default router
 

@@ -11,7 +11,8 @@ import {
   recuperarPassword,
   cambiarDisponibilidadDepartamentoArrendatario,
   obtenerQuejasSugerenciasDepartamento,
-  listarArrendatarios
+  listarArrendatarios,
+  subirImagenArrendatario
 } from '../controllers/arrendatario_controller.js'
 
 
@@ -35,6 +36,14 @@ router.put('/arrendatario/:id',verificarTokenJWT,actualizarPerfil)
 router.put('/arrendatario/actualizarpassword/:id',verificarTokenJWT,actualizarPassword)
 router.put('/arrendatario/cambiarDisponibilidad/:idDepartamento', verificarTokenJWT, cambiarDisponibilidadDepartamentoArrendatario)
 router.get('/arrendatario/listararrendatarios', verificarTokenJWT, listarArrendatarios)
+router.post('/arrendatario/subirimagen', verificarTokenJWT, subirImagenArrendatario)
+
+
+
+
+
+
+
 
 router.get("/auth/google", passport.authenticate("google", {
   scope: ["profile", "email"]

@@ -54,7 +54,15 @@ const estudianteSchema = new Schema({
 	rol: {
 		type: String,
 		default: "estudiante"
-	}
+	},
+	avatarUrl: {
+		type: String,
+		default: null
+	},
+		avatarEstudianteID: {
+		type: String,
+		default: null
+	},
 }, { timestamps: true })
 
 estudianteSchema.methods.encrypPassword = async function (password) {
