@@ -19,17 +19,25 @@ const obtenerQuejasSugerenciasDepartamento = async (req, res) => {
     if (!arrendatarioId) {
       return res.status(401).json({ msg: "No autenticado" });
     }
-    // Buscar el departamento asociado a este arrendatario
+
     const Departamento = (await import("../models/Departamento.js")).default;
-    const departamento = await Departamento.findOne({ arrendatario: arrendatarioId });
-    if (!departamento) {
-      return res.status(404).json({ msg: "No tienes un departamento registrado" });
+
+    const departamentos = await Departamento.find({ arrendatario: arrendatarioId }).select("_id titulo");
+    if (!departamentos.length) {
+      return res.status(404).json({ msg: "No tienes departamentos registrados" });
     }
-    // Buscar quejas y sugerencias asociadas a ese departamento
-    const comentarios = await QuejaSugerencias.find({ departamento: departamento._id })
+
+    const idsDepartamentos = departamentos.map((dep) => dep._id);
+
+    const comentarios = await QuejaSugerencias.find({ departamento: { $in: idsDepartamentos } })
       .populate("usuario", "nombre apellido email")
+      .populate("departamento", "titulo")
       .sort({ fecha: -1 });
-    res.status(200).json({ departamento: departamento._id, comentarios });
+
+    res.status(200).json({
+      departamentos,
+      comentarios,
+    });
   } catch (error) {
     res.status(500).json({ msg: "Error al obtener comentarios", error: error.message });
   }

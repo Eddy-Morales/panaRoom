@@ -21,6 +21,11 @@ const chatUsuariosSchema = new Schema({
     enum: ['administrador', 'arrendatario', 'estudiante'],
     required: true
   },
+  departamentoId: {
+    type: Schema.Types.ObjectId,
+    ref: 'Departamento',
+    default: null
+  },
   mensaje: {
     type: String,
     required: true

@@ -107,6 +107,66 @@ const registrarDepartamento = async (req, res) => {
   }
 };
 
+const actualizarDepartamento = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de departamento no válido" });
+    }
+
+    // Busca el departamento
+    const departamento = await Departamento.findById(id);
+    if (!departamento) {
+      return res.status(404).json({ msg: "Departamento no encontrado" });
+    }
+
+    // Actualiza solo los campos enviados en el body
+    const camposActualizables = [
+      "titulo", "descripcion", "direccion", "categoria", "precioMensual",
+      "numeroHabitaciones", "numeroBanos", "disponible", "serviciosIncluidos",
+      "alicuota", "alicoutaMonto", "mascotas", "urlMapa", "referencia",
+      "bodega", "parqueadero", "numParqueaderos", "guardiania"
+    ];
+
+    camposActualizables.forEach(campo => {
+      if (req.body[campo] !== undefined) {
+        departamento[campo] = req.body[campo];
+      }
+    });
+
+    // Actualización de imágenes (si se envían nuevas imágenes)
+    if (req.files?.imagenes) {
+      // Elimina imágenes antiguas de Cloudinary
+      for (const img of departamento.imagenes) {
+        if (img.public_id) {
+          await cloudinary.uploader.destroy(img.public_id);
+        }
+      }
+
+      // Sube nuevas imágenes
+      const archivos = Array.isArray(req.files.imagenes)
+        ? req.files.imagenes
+        : [req.files.imagenes];
+
+      const nuevasImagenes = [];
+      for (const archivo of archivos) {
+        const { secure_url, public_id } = await cloudinary.uploader.upload(
+          archivo.tempFilePath,
+          { folder: "Departamentos" }
+        );
+        nuevasImagenes.push({ url: secure_url, public_id });
+        await fs.unlink(archivo.tempFilePath);
+      }
+      departamento.imagenes = nuevasImagenes;
+    }
+
+    await departamento.save();
+    res.status(200).json({ msg: "Departamento actualizado correctamente", departamento });
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar el departamento", error: error.message });
+  }
+};
+
 
 const listarDepartamento = async (req,res)=>{
     const departamentos = await Departamento.find()
@@ -240,7 +300,7 @@ const cambiarDisponibilidadDepartamento = async (req, res) => {
 
 const registrarMensajeChat = async (req, res) => {
   try {
-    const { mensaje, remitente, administradorId, arrendatarioId, estudianteId } = req.body;
+    const { mensaje, remitente, administradorId, arrendatarioId, estudianteId, departamentoId } = req.body;
 
     // Validación básica
     if (!mensaje || !remitente) {
@@ -261,7 +321,8 @@ const registrarMensajeChat = async (req, res) => {
       remitente,
       administradorId: administradorId || null,
       arrendatarioId: arrendatarioId || null,
-      estudianteId: estudianteId || null
+      estudianteId: estudianteId || null,
+      departamentoId: departamentoId || null
     });
 
     await nuevoMensaje.save();
@@ -482,5 +543,6 @@ export {
     listarChats,
     actualizarCalificacion,
     listarContactosChat,
-    listarComentariosDepartamento
+    listarComentariosDepartamento,
+    actualizarDepartamento
   }
