@@ -134,6 +134,31 @@ const actualizarDepartamento = async (req, res) => {
       }
     });
 
+    // Actualizar metodoPago si viene en el body
+    if (req.body.metodoPago) {
+      departamento.metodoPago = {
+        ...departamento.metodoPago,
+        ...req.body.metodoPago
+      };
+    }
+
+    // Actualizar imagen QR de pago si se envía un archivo
+    if (req.files?.qrPago) {
+      // Elimina la imagen QR anterior de Cloudinary si existe
+      if (departamento.metodoPago?.qrPago?.public_id) {
+        await cloudinary.uploader.destroy(departamento.metodoPago.qrPago.public_id);
+      }
+      // Sube la nueva imagen QR
+      const resultado = await cloudinary.uploader.upload(req.files.qrPago.tempFilePath, {
+        folder: "Departamentos/QR"
+      });
+      departamento.metodoPago.qrPago = {
+        url: resultado.secure_url,
+        public_id: resultado.public_id
+      };
+      await fs.unlink(req.files.qrPago.tempFilePath);
+    }
+
     // Actualización de imágenes (si se envían nuevas imágenes)
     if (req.files?.imagenes) {
       // Elimina imágenes antiguas de Cloudinary

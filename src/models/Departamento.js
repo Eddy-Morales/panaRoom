@@ -99,6 +99,28 @@ const departamentoSchema = new Schema({
     default: false
   },
 
+  metodoPago: {
+    cuentaBancaria: {
+      type: String,
+      trim: true,
+      required: false
+    },
+    tipoBanco: {
+      type: String,
+      trim: true,
+      required: false
+    },
+    numeroCedula: {
+      type: String,
+      trim: true,
+      required: false
+    },
+    qrPago: {
+      url: { type: String, default: null },
+      public_id: { type: String, default: null }
+    }
+  },
+
   
 }, {
   timestamps: true
