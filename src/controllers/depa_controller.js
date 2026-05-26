@@ -47,8 +47,17 @@ const registrarDepartamento = async (req, res) => {
       return res.status(400).json({ msg: "El ID del arrendatario no es válido." });
     }
 
-    // Validación de campos obligatorios (ajusta según tus requeridos)
-    const camposObligatorios = ['titulo', 'descripcion', 'direccion', 'precioMensual', 'numeroHabitaciones', 'numeroBanos', 'categoria'];
+    // Validación de campos obligatorios
+    const camposObligatorios = [
+      "titulo",
+      "descripcion",
+      "direccion",
+      "precioMensual",
+      "numeroHabitaciones",
+      "numeroBanos",
+      "categoria"
+    ];
+
     for (const campo of camposObligatorios) {
       if (!req.body[campo] || req.body[campo] === "") {
         return res.status(400).json({ msg: `El campo ${campo} es obligatorio.` });
@@ -57,7 +66,7 @@ const registrarDepartamento = async (req, res) => {
 
     const imagenesSubidas = [];
 
-    // Subida de imágenes
+    // Subida de imágenes del departamento
     if (req.files?.imagenes) {
       const archivos = Array.isArray(req.files.imagenes)
         ? req.files.imagenes
@@ -73,8 +82,22 @@ const registrarDepartamento = async (req, res) => {
       }
     }
 
+    // Subida de QR del método de pago
+    let qrPago = { url: null, public_id: null };
+    if (req.files?.qrPago) {
+      const resultadoQr = await cloudinary.uploader.upload(
+        req.files.qrPago.tempFilePath,
+        { folder: "Departamentos/QR" }
+      );
+      qrPago = {
+        url: resultadoQr.secure_url,
+        public_id: resultadoQr.public_id
+      };
+      await fs.unlink(req.files.qrPago.tempFilePath);
+    }
+
     // Validación de alicuota y alicoutaMonto
-    const alicuotaBool = alicuota === true || alicuota === 'true';
+    const alicuotaBool = alicuota === true || alicuota === "true";
     if (alicuotaBool) {
       if (!alicoutaMonto || isNaN(alicoutaMonto)) {
         return res.status(400).json({ msg: "Debe ingresar el monto de la alícuota si escogió la opción de alícuota." });
@@ -82,16 +105,59 @@ const registrarDepartamento = async (req, res) => {
     }
 
     // Validación de parqueadero y numParqueaderos
-    const parqueaderoBool = parqueadero === true || parqueadero === 'true';
+    const parqueaderoBool = parqueadero === true || parqueadero === "true";
     if (parqueaderoBool) {
       if (!numParqueaderos || isNaN(numParqueaderos) || Number(numParqueaderos) < 1) {
         return res.status(400).json({ msg: "Debe ingresar el número de parqueaderos si escogió la opción de parqueadero." });
       }
     }
 
+    // Construcción de metodoPago
+    const metodoPago = {};
+
+    if (req.body.metodoPago) {
+      try {
+        const metodoPagoParseado =
+          typeof req.body.metodoPago === "string"
+            ? JSON.parse(req.body.metodoPago)
+            : req.body.metodoPago;
+
+        if (metodoPagoParseado?.cuentaBancaria) {
+          metodoPago.cuentaBancaria = metodoPagoParseado.cuentaBancaria;
+        }
+        if (metodoPagoParseado?.tipoBanco) {
+          metodoPago.tipoBanco = metodoPagoParseado.tipoBanco;
+        }
+        if (metodoPagoParseado?.numeroCedula) {
+          metodoPago.numeroCedula = metodoPagoParseado.numeroCedula;
+        }
+      } catch (parseError) {
+        return res.status(400).json({ msg: "El campo metodoPago no tiene un formato JSON válido." });
+      }
+    } else {
+      if (req.body.cuentaBancaria) {
+        metodoPago.cuentaBancaria = req.body.cuentaBancaria;
+      }
+      if (req.body.tipoBanco) {
+        metodoPago.tipoBanco = req.body.tipoBanco;
+      }
+      if (req.body.numeroCedula) {
+        metodoPago.numeroCedula = req.body.numeroCedula;
+      }
+    }
+
+    if (qrPago.url) {
+      metodoPago.qrPago = qrPago;
+    }
+
     const nuevoDepartamento = new Departamento({
       ...req.body,
-      imagenes: imagenesSubidas
+      alicuota: alicuotaBool,
+      alicoutaMonto: alicuotaBool ? Number(alicoutaMonto) : null,
+      parqueadero: parqueaderoBool,
+      numParqueaderos: parqueaderoBool ? Number(numParqueaderos) : 0,
+      imagenes: imagenesSubidas,
+      metodoPago: Object.keys(metodoPago).length > 0 ? metodoPago : undefined
     });
 
     await nuevoDepartamento.save();
@@ -100,7 +166,6 @@ const registrarDepartamento = async (req, res) => {
       msg: "Departamento registrado exitosamente",
       departamento: nuevoDepartamento
     });
-
   } catch (error) {
     console.error("Error al registrar departamento:", error);
     res.status(500).json({ msg: "Error interno", error: error.message });
