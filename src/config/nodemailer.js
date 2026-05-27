@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 
-let transporter = nodemailer.createTransport({
+/* let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.USER_MAILTRAP,
@@ -13,6 +13,17 @@ let transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false // Soluciona el error de "self-signed certificate"
     }
+}); */
+
+let transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.USER_MAILTRAP,
+    pass: process.env.PASS_MAILTRAP
+  },
+  family: 4
 });
 
 
