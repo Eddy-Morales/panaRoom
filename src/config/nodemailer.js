@@ -15,22 +15,23 @@ dotenv.config()
     }
 }); */
 
-let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
+const transporter = nodemailer.createTransport({
+  host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
+  port: Number(process.env.BREVO_SMTP_PORT) || 587,
   secure: false,
   auth: {
-    user: process.env.USER_MAILTRAP,
-    pass: process.env.PASS_MAILTRAP
+    user: process.env.BREVO_SMTP_USER,
+    pass: process.env.BREVO_SMTP_PASS
   },
-  family: 4
+  family: 4,
+  connectionTimeout: 10000
 });
 
 
 // Enviar correo de bienvenida con usuario y contraseña al arrendatario
 const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
     let info = await transporter.sendMail({
-        from: process.env.USER_MAILTRAP,
+        from: process.env.BREVO_FROM,
         to: userMail,
         subject: "¡Bienvenido a Pana Room! Tus credenciales de acceso",
         html: `
@@ -57,7 +58,7 @@ const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
 
 const sendMailToRegister = async (userMail, token) => {
     let mailOptions = {
-        from: process.env.USER_MAILTRAP,
+        from: process.env.BREVO_FROM,
         to: userMail,
         subject: "Bienvenido a Pana Room - Encuentra tu espacio universitario 🏡",
         html: `
@@ -90,7 +91,7 @@ const sendMailToRegister = async (userMail, token) => {
 
 const sendMailToRecoveryPassword = async (userMail, token) => {
     let info = await transporter.sendMail({
-        from: "admin@panaroom.com",
+        from: process.env.BREVO_FROM,
         to: userMail,
         subject: "Recuperación de contraseña - Pana Room 🔑",
         html: `
