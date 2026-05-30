@@ -26,8 +26,16 @@ let transporter = nodemailer.createTransport({
   family: 4,
   connectionTimeout: 10000
 }); */
+console.log("USER:", process.env.USER_MAILTRAP);
+console.log("PASS:", process.env.PASS_MAILTRAP ? "CARGADA" : "NO CARGADA");
 
-
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("Error SMTP:", error);
+    } else {
+        console.log("Servidor SMTP listo");
+    }
+});
 // Enviar correo de bienvenida con usuario y contraseña al arrendatario
 const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
     let info = await transporter.sendMail({
