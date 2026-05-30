@@ -4,15 +4,18 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 
-let transporter = nodemailer.createTransport({
-    service: 'gmail',
+const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.USER_MAILTRAP,
         pass: process.env.PASS_MAILTRAP
     },
-    tls: {
-        rejectUnauthorized: false // Soluciona el error de "self-signed certificate"
-    }
+    family: 4,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 15000
 });
 
 /* const transporter = nodemailer.createTransport({
