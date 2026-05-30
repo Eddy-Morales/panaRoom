@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 
-/* let transporter = nodemailer.createTransport({
+let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
         user: process.env.USER_MAILTRAP,
@@ -13,9 +13,9 @@ dotenv.config()
     tls: {
         rejectUnauthorized: false // Soluciona el error de "self-signed certificate"
     }
-}); */
+});
 
-const transporter = nodemailer.createTransport({
+/* const transporter = nodemailer.createTransport({
   host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
   port: Number(process.env.BREVO_SMTP_PORT) || 587,
   secure: false,
@@ -25,13 +25,13 @@ const transporter = nodemailer.createTransport({
   },
   family: 4,
   connectionTimeout: 10000
-});
+}); */
 
 
 // Enviar correo de bienvenida con usuario y contraseña al arrendatario
 const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
     let info = await transporter.sendMail({
-        from: process.env.BREVO_FROM,
+        from: process.env.USER_MAILTRAP,
         to: userMail,
         subject: "¡Bienvenido a Pana Room! Tus credenciales de acceso",
         html: `
@@ -58,7 +58,7 @@ const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
 
 const sendMailToRegister = async (userMail, token) => {
     let mailOptions = {
-        from: process.env.BREVO_FROM,
+        from: process.env.USER_MAILTRAP,
         to: userMail,
         subject: "Bienvenido a Pana Room - Encuentra tu espacio universitario 🏡",
         html: `
@@ -91,7 +91,7 @@ const sendMailToRegister = async (userMail, token) => {
 
 const sendMailToRecoveryPassword = async (userMail, token) => {
     let info = await transporter.sendMail({
-        from: process.env.BREVO_FROM,
+        from: process.env.USER_MAILTRAP,
         to: userMail,
         subject: "Recuperación de contraseña - Pana Room 🔑",
         html: `
