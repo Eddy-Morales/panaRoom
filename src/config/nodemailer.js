@@ -13,6 +13,8 @@ console.log("PASS:", process.env.BREVO_SMTP_PASS ? "CARGADA" : "NO CARGADA");
 dns.lookup(process.env.BREVO_SMTP_HOST, (err, address, family) => {
   console.log("DNS:", { err, address, family });
 });
+
+
 /* let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
