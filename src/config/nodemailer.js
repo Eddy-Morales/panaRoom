@@ -3,7 +3,16 @@ import nodemailer from "nodemailer"
 import dotenv from 'dotenv'
 dotenv.config()
 
+import dns from "dns";
 
+console.log("HOST:", process.env.BREVO_SMTP_HOST);
+console.log("PORT:", process.env.BREVO_SMTP_PORT);
+console.log("USER:", process.env.BREVO_SMTP_USER);
+console.log("PASS:", process.env.BREVO_SMTP_PASS ? "CARGADA" : "NO CARGADA");
+
+dns.lookup(process.env.BREVO_SMTP_HOST, (err, address, family) => {
+  console.log("DNS:", { err, address, family });
+});
 /* let transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -15,25 +24,16 @@ dotenv.config()
     }
 }); */
 
+
 const transporter = nodemailer.createTransport({
   host: process.env.BREVO_SMTP_HOST || "smtp-relay.brevo.com",
-  port: Number(process.env.BREVO_SMTP_PORT) || 587,
+  port: Number(process.env.BREVO_SMTP_PORT) || 2525,
   secure: false,
   auth: {
     user: process.env.BREVO_SMTP_USER,
     pass: process.env.BREVO_SMTP_PASS
   },
   connectionTimeout: 10000
-});
-console.log("USER:", process.env.BREVO_SMTP_USER);
-console.log("PASS:", process.env.BREVO_SMTP_PASS ? "CARGADA" : "NO CARGADA");
-
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Error SMTP:", error);
-    } else {
-        console.log("Servidor SMTP listo");
-    }
 });
 // Enviar correo de bienvenida con usuario y contraseña al arrendatario
 const sendWelcomeMailArrendatario = async (userMail, usuario, password) => {
