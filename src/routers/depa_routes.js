@@ -32,6 +32,6 @@ router.put('/queja-sugerencia/comentario', verificarTokenJWT, actualizarComentar
 router.get('/listar-chats', verificarTokenJWT, listarChats)
 router.put('/queja-sugerencia/calificacion', verificarTokenJWT, actualizarCalificacion)
 router.get('/listar-contactos', verificarTokenJWT, listarContactosChat)
-router.get('/departamento/comentarios/:id', verificarTokenJWT, listarComentariosDepartamento)
+router.get('/departamento/comentarios/:id', listarComentariosDepartamento) //ruta publica
 router.put('/departamento/actualizar/:id', verificarTokenJWT, actualizarDepartamento);
 export default router
