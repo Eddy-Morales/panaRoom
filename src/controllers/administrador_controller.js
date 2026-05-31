@@ -9,7 +9,7 @@ import Departamento from "../models/Departamento.js";
 
 import { crearTokenJWT } from "../middlewares/JWT.js"
 import mongoose from "mongoose"
-import { sendMailToRegister, sendMailToRecoveryPassword, sendWelcomeMailArrendatario } from "../config/nodemailer.js"
+import { sendMailToRegister, sendMailToRecoveryPassword, sendWelcomeMailArrendatario, sendMailToDeleteArrendatario} from "../config/nodemailer.js"
 
 // Cambiar contraseña de un arrendatario por el administrador
 const cambiarPasswordArrendatario = async (req, res) => {
@@ -384,6 +384,43 @@ const listarAdministradores = async (req, res) => {
 };
 
 
+const eliminarArrendatarioPorAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { motivo } = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ msg: "ID de arrendatario no válido" });
+    }
+
+    if (!motivo || !motivo.trim()) {
+      return res.status(400).json({ msg: "El motivo de eliminación es obligatorio" });
+    }
+
+    const arrendatario = await Arrendatario.findById(id);
+    if (!arrendatario) {
+      return res.status(404).json({ msg: "Arrendatario no encontrado" });
+    }
+
+    await sendMailToDeleteArrendatario(
+      arrendatario.email,
+      arrendatario.nombre || arrendatario.email,
+      motivo.trim()
+    );
+
+    await Arrendatario.findByIdAndDelete(id);
+
+    return res.status(200).json({
+      msg: "Arrendatario eliminado correctamente después de enviar el correo"
+    });
+  } catch (error) {
+    return res.status(500).json({
+      msg: "No se pudo eliminar el arrendatario",
+      error: error.message
+    });
+  }
+};
+
 export {
   registro,
   login,  
@@ -407,5 +444,6 @@ export {
   cambiarDisponibilidadDepartamento,
   cambiarEstadoQuejaSugerencia,
   cambiarEstadoUsuario,
-  listarAdministradores
+  listarAdministradores,
+  eliminarArrendatarioPorAdmin
 }

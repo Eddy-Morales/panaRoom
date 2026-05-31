@@ -9,7 +9,8 @@ import {login,perfil, registro, cambiarPasswordArrendatario,
      cambiarEstadoQuejaSugerencia,
      listarAdministradores,
      cambiarEstadoUsuario,
-      actualizarPerfilAdministrador, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
+      actualizarPerfilAdministrador,
+      eliminarArrendatarioPorAdmin, listarTodasQuejasSugerencias} from '../controllers/administrador_controller.js'
 
 
 const router = Router()
@@ -93,6 +94,14 @@ router.put('/administrador/estadoUsuario', verificarTokenJWT, (req, res, next) =
     return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
   }
   return cambiarEstadoUsuario(req, res, next);
+});
+
+
+router.delete('/administrador/eliminar-arrendatario/:id', verificarTokenJWT, (req, res, next) => {
+  if (!req.administradorBDD) {
+    return res.status(403).json({ msg: 'Solo el administrador puede realizar esta acción' });
+  }
+  return eliminarArrendatarioPorAdmin(req, res, next);
 });
 
 export default router

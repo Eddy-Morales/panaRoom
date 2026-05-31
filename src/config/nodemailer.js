@@ -126,9 +126,29 @@ const sendMailToRecoveryPassword = async (userMail, token) => {
     console.log("Correo de recuperación de contraseña enviado satisfactoriamente:", info.messageId);
 };
 
+const sendMailToDeleteArrendatario = async (userMail, nombre, motivo) => {
+  const info = await transporter.sendMail({
+    from: process.env.BREVO_FROM,
+    to: userMail,
+    subject: "Notificación de eliminación de cuenta - Pana Room",
+    html: `
+      <div style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 20px; border-radius: 10px;">
+        <h1 style="text-align:center; color:#b00020;">Cuenta eliminada</h1>
+        <p>Hola <b>${nombre}</b>,</p>
+        <p>Tu cuenta de arrendatario ha sido eliminada por el administrador.</p>
+        <p><b>Motivo:</b> ${motivo}</p>
+        <hr>
+        <p style="color:#666;">Si consideras que esto es un error, puedes contactar con soporte.</p>
+      </div>
+    `
+  });
+
+  return info;
+};
 
 export {
     sendMailToRegister,
     sendMailToRecoveryPassword
     , sendWelcomeMailArrendatario
+    , sendMailToDeleteArrendatario
 }
