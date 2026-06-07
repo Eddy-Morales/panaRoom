@@ -299,6 +299,15 @@ const listarDepartamentosEstudiante = async (req, res) => {
     const Departamento = (await import("../models/Departamento.js")).default;
     const departamentos = await Departamento.find({ estudiante: estudianteId });
 
+    // 👇 Validar si el arreglo viene vacío
+    if (departamentos.length === 0) {
+      return res.status(200).json({ 
+        msg: "Aún no tienes ningún departamento vinculado a tu cuenta.", 
+        departamentos: [] 
+      });
+    }
+
+    // Si sí tiene departamentos, los enviamos normalmente
     res.status(200).json(departamentos);
   } catch (error) {
     res.status(500).json({ msg: "Error al listar departamentos", error: error.message });

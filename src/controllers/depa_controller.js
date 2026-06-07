@@ -8,6 +8,8 @@ import Arrendatario from "../models/Arrendatario.js";
 import ChatUsuarios from "../models/ChatUsuarios.js";
 import QuejaSugerencias from "../models/Quejas_Sugerencias.js";
 
+import Estudiante from "../models/Estudiante.js";
+
 import { io } from '../index.js'; // Ajusta la ruta si es necesario
 
 
@@ -18,21 +20,41 @@ const stripe = new Stripe(`${process.env.STRIPE_PRIVATE_KEY}`);
 // Asignar estudiante a un departamento
 const asignarEstudianteADepartamento = async (req, res) => {
   const { departamentoId, estudianteId } = req.body;
+
+  // 1. Validación de formato de los IDs
   if (!mongoose.Types.ObjectId.isValid(departamentoId) || !mongoose.Types.ObjectId.isValid(estudianteId)) {
     return res.status(400).json({ msg: "ID de departamento o estudiante no válido" });
   }
+
   try {
+    // 2. Verificar si el estudiante existe en la colección "estudiantes"
+    const estudianteExiste = await Estudiante.findById(estudianteId);
+    if (!estudianteExiste) {
+      return res.status(404).json({ msg: "El estudiante especificado no existe en el sistema" });
+    }
+
+    // 3. Buscar el departamento
     const departamento = await Departamento.findById(departamentoId);
     if (!departamento) {
       return res.status(404).json({ msg: "Departamento no encontrado" });
     }
+
+    // 4. Verificar si ya cuenta con un inquilino asignado
     if (departamento.estudiante) {
       return res.status(400).json({ msg: "El departamento ya tiene un estudiante asignado" });
     }
+
+    // 5. Vincular y guardar cambios de manera definitiva
     departamento.estudiante = estudianteId;
     await departamento.save();
-    res.status(200).json({ msg: "Estudiante asignado correctamente al departamento", departamento });
+
+    res.status(200).json({ 
+      msg: "Estudiante asignado correctamente al departamento", 
+      departamento 
+    });
+
   } catch (error) {
+    console.error("Error al asignar estudiante:", error);
     res.status(500).json({ msg: "Error al asignar estudiante", error: error.message });
   }
 };
