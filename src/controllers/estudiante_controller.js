@@ -19,20 +19,27 @@ const perfilEstudiante =(req,res)=>{
 const confirmarMailEstudiante = async (req, res) => {
     try {
         const { token } = req.params;
-        if (!token) return res.status(400).json({ msg: "Token no proporcionado" });
+        // Si usas rutas como /confirmar/:token, Express requiere el parámetro, pero es buena práctica validarlo
+        if (!token || token.trim() === "") {
+            return res.status(400).json({ msg: "Token no proporcionado o inválido" });
+        }
 
         const estudianteBDD = await Estudiante.findOne({ token });
         if (!estudianteBDD) {
-            return res.status(404).json({ msg: "Token inválido o expirado" });
-        }
-        if (estudianteBDD.confirmEmail) {
-            return res.status(400).json({ msg: "La cuenta ya ha sido confirmada" });
+            return res.status(404).json({ msg: "Token inválido, expirado o ya utilizado" });
         }
 
-        estudianteBDD.token = null;
+        if (estudianteBDD.confirmEmail) {
+            return res.status(400).json({ msg: "La cuenta ya ha sido confirmada previamente" });
+        }
+
+        // Modificaciones del documento
+        estudianteBDD.token = null; 
         estudianteBDD.confirmEmail = true;
+        
         await estudianteBDD.save();
-        res.status(200).json({ msg: "Token confirmado, ya puedes iniciar sesión" });
+        res.status(200).json({ msg: "Token confirmado con éxito, ya puedes iniciar sesión" });
+        
     } catch (error) {
         console.error("Error al confirmar email:", error);
         res.status(500).json({ msg: "Error interno al confirmar email" });
@@ -146,18 +153,44 @@ const loginEstudiante = async (req, res) => {
 
 // Crear estudiante
 const registrarEstudiante = async (req, res) => {
-	const { email, password } = req.body;
-	if (Object.values(req.body).includes("")) return res.status(400).json({ msg: "Todos los campos son obligatorios" });
-	const estudianteEmailBDD = await Estudiante.findOne({ email });
-	if (estudianteEmailBDD) return res.status(400).json({ msg: "El Email ya está registrado" });
-	const nuevoEstudiante = new Estudiante(req.body);
-	if (password) {
-		nuevoEstudiante.password = await nuevoEstudiante.encrypPassword(password);
-	}
-	const token = nuevoEstudiante.crearToken();
-	await sendMailToRegister(email, token);
-	await nuevoEstudiante.save();
-	res.status(200).json({ msg: "Revisa tu correo electrónico para confirmar tu cuenta" });
+    try {
+        const { email, password, nombre, apellido } = req.body;
+
+        // 1. Validación estricta contra vacíos, nulos, indefinidos y espacios en blanco
+        const camposObligatorios = [email, password, nombre, apellido];
+        if (camposObligatorios.some(campo => !campo || String(campo).trim() === "")) {
+            return res.status(400).json({ msg: "Todos los campos son obligatorios y no pueden contener solo espacios" });
+        }
+
+        // 2. Verificar si el Email ya existe
+        const estudianteEmailBDD = await Estudiante.findOne({ email });
+        if (estudianteEmailBDD) {
+            return res.status(400).json({ msg: "El Email ya está registrado" });
+        }
+
+        // 3. Instanciar y asegurar password
+        const nuevoEstudiante = new Estudiante(req.body);
+        nuevoEstudiante.password = await nuevoEstudiante.encrypPassword(password);
+        
+        // 4. Token y envío de correo
+        const token = nuevoEstudiante.crearToken();
+        
+        // Colocamos el envío en un bloque protegido por si falla el proveedor de e-mail (Nodemailer)
+        try {
+            await sendMailToRegister(email, token);
+        } catch (mailError) {
+            console.error("Error al enviar el correo de registro:", mailError);
+            return res.status(500).json({ msg: "Error al enviar el correo de confirmación. Inténtalo más tarde." });
+        }
+
+        // 5. Guardar en base de datos de manera definitiva
+        await nuevoEstudiante.save();
+        res.status(200).json({ msg: "Revisa tu correo electrónico para confirmar tu cuenta" });
+
+    } catch (error) {
+        console.error("Error en registrarEstudiante:", error);
+        res.status(500).json({ msg: "Error interno en el servidor al registrar estudiante", error: error.message });
+    }
 };
 
 
