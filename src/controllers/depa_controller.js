@@ -125,6 +125,9 @@ const registrarDepartamento = async (req, res) => {
         if (metodoPagoParseado?.cuentaBancaria) {
           metodoPago.cuentaBancaria = metodoPagoParseado.cuentaBancaria;
         }
+        if (metodoPagoParseado?.tipoCuenta) {
+          metodoPago.tipoCuenta = metodoPagoParseado.tipoCuenta;
+        }
         if (metodoPagoParseado?.tipoBanco) {
           metodoPago.tipoBanco = metodoPagoParseado.tipoBanco;
         }
@@ -137,6 +140,9 @@ const registrarDepartamento = async (req, res) => {
     } else {
       if (req.body.cuentaBancaria) {
         metodoPago.cuentaBancaria = req.body.cuentaBancaria;
+      }
+      if (req.body.tipoCuenta) {
+        metodoPago.tipoCuenta = req.body.tipoCuenta;
       }
       if (req.body.tipoBanco) {
         metodoPago.tipoBanco = req.body.tipoBanco;

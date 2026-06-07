@@ -48,34 +48,56 @@ const crearArrendatario = async (req, res) => {
     console.log("Archivos recibidos en req.files:", req.files);
     
     const { nombre, apellido, direccion, celular, email } = req.body;
-    // Validar campos obligatorios
+    
+    // 1. Validar campos obligatorios del formulario
     if ([nombre, apellido, direccion, celular, email].some(campo => !campo || campo.trim() === "")) {
       return res.status(400).json({ msg: "Todos los campos son obligatorios" });
     }
-    // Verificar si el email ya está registrado
+    
+    // 2. Verificar si el email ya está registrado
     const existe = await Arrendatario.findOne({ email });
     if (existe) {
       return res.status(409).json({ msg: "El email ya está registrado" });
     }
 
-    // Lógica para subir documentos a Cloudinary
+    // Lógica para subir documentos a Cloudinary (Imágenes y PDFs)
     const imagenesDocumentos = [];
+    
     if (req.files?.imagenesDocumentos) {
       const archivos = Array.isArray(req.files.imagenesDocumentos)
         ? req.files.imagenesDocumentos
         : [req.files.imagenesDocumentos];
 
+      // Definir formatos permitidos: imágenes comunes y documentos PDF
+      const formatosPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+
       for (const archivo of archivos) {
+        // Validación de tipo de archivo (MIME type)
+        if (!formatosPermitidos.includes(archivo.mimetype)) {
+          // Es crucial borrar el archivo temporal del servidor si el formato no es válido
+          await fs.unlink(archivo.tempFilePath);
+          return res.status(400).json({ 
+            msg: `Formato no válido para el archivo '${archivo.name}'. Solo se permiten imágenes (JPG, PNG) y PDFs.` 
+          });
+        }
+
+        // Subida a Cloudinary
         const { secure_url, public_id } = await cloudinary.uploader.upload(
           archivo.tempFilePath,
-          { folder: "DocumentosArrendatario" }
+          { 
+            folder: "DocumentosArrendatario",
+            resource_type: "auto" // <--- Crucial: Permite que Cloudinary detecte y acepte PDFs automáticamente
+          }
         );
+        
         imagenesDocumentos.push({ url: secure_url, public_id });
+        
+        // Eliminar el archivo temporal del servidor local tras subirlo con éxito
         await fs.unlink(archivo.tempFilePath);
       }
     }
 
-    // Crear el arrendatario con los documentos
+    // 3. Crear el arrendatario con los documentos
     const nuevoArrendatario = new Arrendatario({
       nombre,
       apellido,
@@ -84,13 +106,27 @@ const crearArrendatario = async (req, res) => {
       email,
       imagenesDocumentos
     });
+    
     await nuevoArrendatario.save();
+    
     res.status(201).json({
       msg: "Datos enviados exitosamente, el administrador confirmará tu cuenta y sus credenciales seran enviadas a su correo",
       arrendatario: nuevoArrendatario
     });
+    
   } catch (error) {
     console.error("Error al crear arrendatario:", error);
+    
+    // Limpieza de emergencia: si hay un error a mitad del bucle, intentamos limpiar archivos temporales sobrantes
+    if (req.files?.imagenesDocumentos) {
+      const archivos = Array.isArray(req.files.imagenesDocumentos) ? req.files.imagenesDocumentos : [req.files.imagenesDocumentos];
+      for (const archivo of archivos) {
+        if (await fs.pathExists(archivo.tempFilePath)) {
+          await fs.unlink(archivo.tempFilePath).catch(() => {});
+        }
+      }
+    }
+    
     res.status(500).json({ msg: "Error al crear arrendatario", error: error.message });
   }
 };

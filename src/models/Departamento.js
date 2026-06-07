@@ -105,6 +105,11 @@ const departamentoSchema = new Schema({
       trim: true,
       required: false
     },
+    tipoCuenta: {
+      type: String,
+      trim: true,
+      required: false
+    },
     tipoBanco: {
       type: String,
       trim: true,
