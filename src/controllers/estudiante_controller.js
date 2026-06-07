@@ -162,10 +162,10 @@ const loginEstudiante = async (req, res) => {
 // Crear estudiante
 const registrarEstudiante = async (req, res) => {
     try {
-        const { email, password, nombre, apellido } = req.body;
+        const { email, password, nombre, apellido, celular } = req.body;
 
         // 1. Validación estricta contra vacíos, nulos, indefinidos y espacios en blanco
-        const camposObligatorios = [email, password, nombre, apellido];
+        const camposObligatorios = [email, password, nombre, apellido, celular];
         if (camposObligatorios.some(campo => !campo || String(campo).trim() === "")) {
             return res.status(400).json({ msg: "Todos los campos son obligatorios y no pueden contener solo espacios" });
         }
