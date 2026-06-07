@@ -19,21 +19,29 @@ const perfilEstudiante =(req,res)=>{
 const confirmarMailEstudiante = async (req, res) => {
     try {
         const { token } = req.params;
-        // Si usas rutas como /confirmar/:token, Express requiere el parámetro, pero es buena práctica validarlo
+
+        // Validación del parámetro de la ruta
         if (!token || token.trim() === "") {
             return res.status(400).json({ msg: "Token no proporcionado o inválido" });
         }
 
+        // Buscar al estudiante por el token
         const estudianteBDD = await Estudiante.findOne({ token });
+        
+        // SI NO SE ENCUENTRA: Significa que el token nunca existió, expiró, 
+        // o ya se usó con éxito (y por ende se cambió a null).
         if (!estudianteBDD) {
-            return res.status(404).json({ msg: "Token inválido, expirado o ya utilizado" });
+            return res.status(404).json({ 
+                msg: "El enlace es inválido, ha expirado o la cuenta ya fue confirmada previamente. Intenta iniciar sesión." 
+            });
         }
 
+        // Este condicional queda como doble respaldo por si acaso el token no se limpió correctamente
         if (estudianteBDD.confirmEmail) {
             return res.status(400).json({ msg: "La cuenta ya ha sido confirmada previamente" });
         }
 
-        // Modificaciones del documento
+        // Modificaciones del documento en la primera confirmación
         estudianteBDD.token = null; 
         estudianteBDD.confirmEmail = true;
         
