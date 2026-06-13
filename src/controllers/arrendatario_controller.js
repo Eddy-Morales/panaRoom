@@ -46,88 +46,145 @@ const obtenerQuejasSugerenciasDepartamento = async (req, res) => {
 const crearArrendatario = async (req, res) => {
   try {
     console.log("Archivos recibidos en req.files:", req.files);
-    
+
     const { nombre, apellido, direccion, celular, email } = req.body;
-    
-    // 1. Validar campos obligatorios del formulario
-    if ([nombre, apellido, direccion, celular, email].some(campo => !campo || campo.trim() === "")) {
-      return res.status(400).json({ msg: "Todos los campos son obligatorios" });
-    }
-    
-    // 2. Verificar si el email ya está registrado
-    const existe = await Arrendatario.findOne({ email });
-    if (existe) {
-      return res.status(409).json({ msg: "El email ya está registrado" });
+
+    // 1. Validar campos obligatorios
+    if (
+      [nombre, apellido, direccion, celular, email].some(
+        campo => !campo || campo.trim() === ""
+      )
+    ) {
+      return res.status(400).json({
+        msg: "Todos los campos son obligatorios"
+      });
     }
 
-    // Lógica para subir documentos a Cloudinary (Imágenes y PDFs)
+    // 2. Validar nombre
+    if (nombre.trim().length < 3 || nombre.trim().length > 30) {
+      return res.status(400).json({
+        msg: "El nombre debe tener entre 3 y 30 caracteres"
+      });
+    }
+
+    // 3. Validar apellido
+    if (apellido.trim().length < 3 || apellido.trim().length > 30) {
+      return res.status(400).json({
+        msg: "El apellido debe tener entre 3 y 30 caracteres"
+      });
+    }
+
+    // 4. Validar dirección
+    if (direccion.trim().length < 5 || direccion.trim().length > 100) {
+      return res.status(400).json({
+        msg: "La dirección debe tener entre 5 y 100 caracteres"
+      });
+    }
+
+    // 5. Validar celular ecuatoriano
+    if (!/^09\d{8}$/.test(celular)) {
+      return res.status(400).json({
+        msg: "Ingrese un número celular ecuatoriano válido"
+      });
+    }
+
+    // 6. Validar email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        msg: "El correo electrónico no es válido"
+      });
+    }
+
+    // 7. Verificar si el email ya está registrado
+    const existe = await Arrendatario.findOne({ email });
+
+    if (existe) {
+      return res.status(409).json({
+        msg: "El email ya está registrado"
+      });
+    }
+
+    // 8. Subir documentos a Cloudinary
     const imagenesDocumentos = [];
-    
+
     if (req.files?.imagenesDocumentos) {
       const archivos = Array.isArray(req.files.imagenesDocumentos)
         ? req.files.imagenesDocumentos
         : [req.files.imagenesDocumentos];
 
-      // Definir formatos permitidos: imágenes comunes y documentos PDF
-      const formatosPermitidos = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+      const formatosPermitidos = [
+        "image/jpeg",
+        "image/png",
+        "image/jpg",
+        "application/pdf"
+      ];
 
       for (const archivo of archivos) {
-        // Validación de tipo de archivo (MIME type)
         if (!formatosPermitidos.includes(archivo.mimetype)) {
-          // Es crucial borrar el archivo temporal del servidor si el formato no es válido
           await fs.unlink(archivo.tempFilePath);
-          return res.status(400).json({ 
-            msg: `Formato no válido para el archivo '${archivo.name}'. Solo se permiten imágenes (JPG, PNG) y PDFs.` 
+
+          return res.status(400).json({
+            msg: `Formato no válido para el archivo '${archivo.name}'. Solo se permiten imágenes (JPG, PNG) y PDFs.`
           });
         }
 
-        // Subida a Cloudinary
-        const { secure_url, public_id } = await cloudinary.uploader.upload(
-          archivo.tempFilePath,
-          { 
-            folder: "DocumentosArrendatario",
-            resource_type: "auto" // <--- Crucial: Permite que Cloudinary detecte y acepte PDFs automáticamente
-          }
-        );
-        
-        imagenesDocumentos.push({ url: secure_url, public_id });
-        
-        // Eliminar el archivo temporal del servidor local tras subirlo con éxito
+        const { secure_url, public_id } =
+          await cloudinary.uploader.upload(
+            archivo.tempFilePath,
+            {
+              folder: "DocumentosArrendatario",
+              resource_type: "auto"
+            }
+          );
+
+        imagenesDocumentos.push({
+          url: secure_url,
+          public_id
+        });
+
         await fs.unlink(archivo.tempFilePath);
       }
     }
 
-    // 3. Crear el arrendatario con los documentos
+    // 9. Crear arrendatario
     const nuevoArrendatario = new Arrendatario({
-      nombre,
-      apellido,
-      direccion,
-      celular,
-      email,
+      nombre: nombre.trim(),
+      apellido: apellido.trim(),
+      direccion: direccion.trim(),
+      celular: celular.trim(),
+      email: email.trim().toLowerCase(),
       imagenesDocumentos
     });
-    
+
     await nuevoArrendatario.save();
-    
-    res.status(201).json({
-      msg: "Datos enviados exitosamente, el administrador confirmará tu cuenta y sus credenciales seran enviadas a su correo",
+
+    return res.status(201).json({
+      msg: "Datos enviados exitosamente, el administrador confirmará tu cuenta y sus credenciales serán enviadas a su correo",
       arrendatario: nuevoArrendatario
     });
-    
+
   } catch (error) {
     console.error("Error al crear arrendatario:", error);
-    
-    // Limpieza de emergencia: si hay un error a mitad del bucle, intentamos limpiar archivos temporales sobrantes
+
+    // Limpieza de archivos temporales
     if (req.files?.imagenesDocumentos) {
-      const archivos = Array.isArray(req.files.imagenesDocumentos) ? req.files.imagenesDocumentos : [req.files.imagenesDocumentos];
+      const archivos = Array.isArray(req.files.imagenesDocumentos)
+        ? req.files.imagenesDocumentos
+        : [req.files.imagenesDocumentos];
+
       for (const archivo of archivos) {
         if (await fs.pathExists(archivo.tempFilePath)) {
           await fs.unlink(archivo.tempFilePath).catch(() => {});
         }
       }
     }
-    
-    res.status(500).json({ msg: "Error al crear arrendatario", error: error.message });
+
+    return res.status(500).json({
+      msg: "Error al crear arrendatario",
+      error: error.message
+    });
   }
 };
 
@@ -206,80 +263,183 @@ const actualizarPerfil = async (req, res) => {
     try {
         const { id } = req.params;
         const { nombre, apellido, direccion, celular, email, profileImageOption } = req.body;
-        
-        if (!mongoose.Types.ObjectId.isValid(id)) 
-            return res.status(404).json({ msg: `Lo sentimos, debe ser un id válido` });
-        
-        // No verificamos campos vacíos para permitir actualizaciones parciales
-        
+
+        // Validar ID
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(404).json({
+                msg: "Lo sentimos, debe ser un id válido"
+            });
+        }
+
+        // Buscar arrendatario
         const arrendatarioBDD = await Arrendatario.findById(id);
-        if (!arrendatarioBDD) 
-            return res.status(404).json({ msg: `Lo sentimos, no existe el arrendatario ${id}` });
-        
-        // Verificar si el email ya existe (solo si se está cambiando)
-        if (email && arrendatarioBDD.email !== email) {
-            const arrendatarioBDDMail = await Arrendatario.findOne({ email });
-            if (arrendatarioBDDMail) {
-                return res.status(404).json({ msg: `Lo sentimos, el email ya se encuentra registrado `});
+
+        if (!arrendatarioBDD) {
+            return res.status(404).json({
+                msg: `Lo sentimos, no existe el arrendatario ${id}`
+            });
+        }
+
+        // ==========================
+        // VALIDACIONES
+        // ==========================
+
+        // Validar nombre
+        if (nombre !== undefined) {
+            if (nombre.trim().length < 3 || nombre.trim().length > 30) {
+                return res.status(400).json({
+                    msg: "El nombre debe tener entre 3 y 30 caracteres"
+                });
             }
         }
-        
-        // Actualizar campos básicos
-        arrendatarioBDD.nombre = nombre ?? arrendatarioBDD.nombre;
-        arrendatarioBDD.apellido = apellido ?? arrendatarioBDD.apellido;
-        arrendatarioBDD.direccion = direccion ?? arrendatarioBDD.direccion;
-        arrendatarioBDD.celular = celular ?? arrendatarioBDD.celular;
-        arrendatarioBDD.email = email ?? arrendatarioBDD.email;
-        
-        // Si se envió una opción de imagen de perfil, la guardamos
+
+        // Validar apellido
+        if (apellido !== undefined) {
+            if (apellido.trim().length < 3 || apellido.trim().length > 30) {
+                return res.status(400).json({
+                    msg: "El apellido debe tener entre 3 y 30 caracteres"
+                });
+            }
+        }
+
+        // Validar dirección
+        if (direccion !== undefined) {
+            if (direccion.trim().length < 5 || direccion.trim().length > 100) {
+                return res.status(400).json({
+                    msg: "La dirección debe tener entre 5 y 100 caracteres"
+                });
+            }
+        }
+
+        // Validar celular ecuatoriano
+        if (celular !== undefined) {
+            if (!/^09\d{8}$/.test(celular)) {
+                return res.status(400).json({
+                    msg: "Ingrese un número celular válido"
+                });
+            }
+        }
+
+        // Validar email
+        if (email !== undefined) {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+            if (!emailRegex.test(email)) {
+                return res.status(400).json({
+                    msg: "El correo electrónico no es válido"
+                });
+            }
+        }
+
+        // Verificar si el email ya existe (solo si se está cambiando)
+        if (
+            email &&
+            arrendatarioBDD.email.toLowerCase() !== email.toLowerCase()
+        ) {
+            const arrendatarioBDDMail = await Arrendatario.findOne({
+                email: email.toLowerCase()
+            });
+
+            if (arrendatarioBDDMail) {
+                return res.status(409).json({
+                    msg: "Lo sentimos, el email ya se encuentra registrado"
+                });
+            }
+        }
+
+        // ==========================
+        // ACTUALIZAR DATOS
+        // ==========================
+
+        arrendatarioBDD.nombre =
+            nombre !== undefined ? nombre.trim() : arrendatarioBDD.nombre;
+
+        arrendatarioBDD.apellido =
+            apellido !== undefined ? apellido.trim() : arrendatarioBDD.apellido;
+
+        arrendatarioBDD.direccion =
+            direccion !== undefined ? direccion.trim() : arrendatarioBDD.direccion;
+
+        arrendatarioBDD.celular =
+            celular !== undefined ? celular.trim() : arrendatarioBDD.celular;
+
+        arrendatarioBDD.email =
+            email !== undefined
+                ? email.trim().toLowerCase()
+                : arrendatarioBDD.email;
+
+        // ==========================
+        // AVATAR
+        // ==========================
+
         if (profileImageOption) {
             arrendatarioBDD.avatarType = profileImageOption;
         }
-        
-        // Procesar la imagen subida
-        if (profileImageOption === 'upload' && req.files && req.files.avatarArren) {
-            // Si ya hay una imagen anterior, la eliminamos de Cloudinary
+
+        // Imagen subida por el usuario
+        if (
+            profileImageOption === "upload" &&
+            req.files &&
+            req.files.avatarArren
+        ) {
+            // Eliminar imagen anterior
             if (arrendatarioBDD.avatarArrenID) {
-                await cloudinary.uploader.destroy(arrendatarioBDD.avatarArrenID);
+                await cloudinary.uploader.destroy(
+                    arrendatarioBDD.avatarArrenID
+                );
             }
-            
-            // Subir la nueva imagen
-            const resultado = await cloudinary.uploader.upload(req.files.avatarArren.tempFilePath, {
-                folder: "avataresArrendatario"
-            });
-            
-            // Guardar datos de la nueva imagen
+
+            const resultado = await cloudinary.uploader.upload(
+                req.files.avatarArren.tempFilePath,
+                {
+                    folder: "avataresArrendatario"
+                }
+            );
+
             arrendatarioBDD.avatarUrl = resultado.secure_url;
             arrendatarioBDD.avatarArrenID = resultado.public_id;
-            
-            // Eliminar archivo temporal
+
             await fs.remove(req.files.avatarArren.tempFilePath);
-        } 
-        // Procesar la imagen generada por IA
-        else if (profileImageOption === 'ia' && req.body.avatarArrenIA) {
-            // Si ya hay una imagen anterior, la eliminamos de Cloudinary
+        }
+
+        // Imagen generada por IA
+        else if (
+            profileImageOption === "ia" &&
+            req.body.avatarArrenIA
+        ) {
+            // Eliminar imagen anterior
             if (arrendatarioBDD.avatarArrenID) {
-                await cloudinary.uploader.destroy(arrendatarioBDD.avatarArrenID);
+                await cloudinary.uploader.destroy(
+                    arrendatarioBDD.avatarArrenID
+                );
             }
-            
-            // Subir la imagen base64 a Cloudinary
-            const resultado = await cloudinary.uploader.upload(req.body.avatarArrenIA, {
-                folder: "avataresArrendatario"
-            });
-            
-            // Guardar datos de la nueva imagen
+
+            const resultado = await cloudinary.uploader.upload(
+                req.body.avatarArrenIA,
+                {
+                    folder: "avataresArrendatario"
+                }
+            );
+
             arrendatarioBDD.avatarUrl = resultado.secure_url;
             arrendatarioBDD.avatarArrenID = resultado.public_id;
         }
-        
-        // Guardar cambios en la base de datos
+
+        // ==========================
+        // GUARDAR CAMBIOS
+        // ==========================
+
         await arrendatarioBDD.save();
-        
-        // Devolver el arrendatario actualizado
-        res.status(200).json(arrendatarioBDD);
+
+        return res.status(200).json(arrendatarioBDD);
+
     } catch (error) {
         console.error("Error al actualizar perfil:", error);
-        res.status(500).json({ msg: "Error al actualizar el perfil", error: error.message });
+
+        return res.status(500).json({
+            msg: "Error al actualizar el perfil",
+            error: error.message
+        });
     }
 };
 

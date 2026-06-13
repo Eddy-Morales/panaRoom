@@ -91,18 +91,91 @@ const confirmarArrendatarioPorAdmin = async (req, res) => {
     res.status(500).json({ msg: "Error al confirmar arrendatario", error: error.message });
   }
 };
-const registro = async (req, res) => {
-  const { email, password } = req.body
-  if (Object.values(req.body).includes("")) return res.status(400).json({ msg: "todos los campos son obligatorios" })
-  const administradorEmailBDD = await Administrador.findOne({ email })
-  if (administradorEmailBDD) return res.status(400).json({ msg: "el Email ya está registrado" })
-  const nuevoAdministrador = new Administrador(req.body)
-  nuevoAdministrador.password = await nuevoAdministrador.encrypPassword(password)
-  await nuevoAdministrador.save()
-  res.status(200).json({ msg: "Usuario registrado correctamente" })
 
-  console.log("Administrador registrado:")
-}
+
+const registro = async (req, res) => {
+
+  const { nombre, apellido, direccion, telefono, email, password } = req.body;
+
+  // Validar campos vacíos
+  if (Object.values(req.body).includes("")) {
+    return res.status(400).json({
+      msg: "Todos los campos son obligatorios"
+    });
+  }
+
+  // Validar longitud de nombre
+  if (nombre.length < 3 || nombre.length > 30) {
+    return res.status(400).json({
+      msg: "El nombre debe tener entre 3 y 30 caracteres"
+    });
+  }
+
+  // Validar longitud de apellido
+  if (apellido.length < 3 || apellido.length > 30) {
+    return res.status(400).json({
+      msg: "El apellido debe tener entre 3 y 30 caracteres"
+    });
+  }
+
+  // Validar longitud de dirección
+  if (direccion.length < 5 || direccion.length > 100) {
+    return res.status(400).json({
+      msg: "La dirección debe tener entre 5 y 100 caracteres"
+    });
+  }
+
+  // Validar teléfono (solo números)
+  if (!/^\d+$/.test(telefono)) {
+    return res.status(400).json({
+      msg: "El teléfono debe contener únicamente números"
+    });
+  }
+
+  // Validar longitud de teléfono
+  if (telefono.length !== 10) {
+    return res.status(400).json({
+      msg: "El teléfono debe tener 10 dígitos"
+    });
+  }
+
+  // Validar email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
+    return res.status(400).json({
+      msg: "El correo electrónico no es válido"
+    });
+  }
+
+  // Validar contraseña
+  if (password.length < 8) {
+    return res.status(400).json({
+      msg: "La contraseña debe tener al menos 8 caracteres"
+    });
+  }
+
+  const administradorEmailBDD = await Administrador.findOne({ email });
+
+  if (administradorEmailBDD) {
+    return res.status(400).json({
+      msg: "El Email ya está registrado"
+    });
+  }
+
+  const nuevoAdministrador = new Administrador(req.body);
+
+  nuevoAdministrador.password =
+    await nuevoAdministrador.encrypPassword(password);
+
+  await nuevoAdministrador.save();
+
+  res.status(200).json({
+    msg: "Usuario registrado correctamente"
+  });
+
+  console.log("Administrador registrado:");
+};
 
 
 
@@ -218,19 +291,71 @@ const actualizarPerfilAdministrador = async (req, res) => {
   try {
     const { id } = req.params;
     const { nombre, apellido, direccion, telefono } = req.body;
-    if (!mongoose.Types.ObjectId.isValid(id))
-      return res.status(404).json({ msg: `Debe ser un id válido` });
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({
+        msg: "Debe ser un id válido"
+      });
+    }
+
     const adminBDD = await Administrador.findById(id);
-    if (!adminBDD)
-      return res.status(404).json({ msg: `No existe el administrador ${id}` });
+
+    if (!adminBDD) {
+      return res.status(404).json({
+        msg: `No existe el administrador ${id}`
+      });
+    }
+
+    // Validar nombre
+    if (nombre !== undefined) {
+      if (nombre.trim().length < 3 || nombre.trim().length > 30) {
+        return res.status(400).json({
+          msg: "El nombre debe tener entre 3 y 30 caracteres"
+        });
+      }
+    }
+
+    // Validar apellido
+    if (apellido !== undefined) {
+      if (apellido.trim().length < 3 || apellido.trim().length > 30) {
+        return res.status(400).json({
+          msg: "El apellido debe tener entre 3 y 30 caracteres"
+        });
+      }
+    }
+
+    // Validar dirección
+    if (direccion !== undefined) {
+      if (direccion.trim().length < 5 || direccion.trim().length > 100) {
+        return res.status(400).json({
+          msg: "La dirección debe tener entre 5 y 100 caracteres"
+        });
+      }
+    }
+
+    // Validar teléfono ecuatoriano
+    if (telefono !== undefined) {
+      if (!/^09\d{8}$/.test(telefono)) {
+        return res.status(400).json({
+          msg: "Ingrese un número telefónico válido"
+        });
+      }
+    }
+
     adminBDD.nombre = nombre ?? adminBDD.nombre;
     adminBDD.apellido = apellido ?? adminBDD.apellido;
     adminBDD.direccion = direccion ?? adminBDD.direccion;
     adminBDD.telefono = telefono ?? adminBDD.telefono;
+
     await adminBDD.save();
+
     res.status(200).json(adminBDD);
+
   } catch (error) {
-    res.status(500).json({ msg: "Error al actualizar el administrador", error: error.message });
+    res.status(500).json({
+      msg: "Error al actualizar el administrador",
+      error: error.message
+    });
   }
 };
 
@@ -343,16 +468,20 @@ const cambiarEstadoQuejaSugerencia = async (req, res) => {
 
 const cambiarEstadoUsuario = async (req, res) => {
   try {
-    const { id, tipo, confirmEmail } = req.body; // id: usuario, tipo: 'estudiante' o 'arrendatario'
+    const { id, tipo, status } = req.body; // status: true o false
 
-    if (typeof confirmEmail !== "boolean") {
-      return res.status(400).json({ msg: "El campo 'confirmEmail' debe ser booleano (true o false)" });
+    if (typeof status !== "boolean") {
+      return res.status(400).json({
+        msg: "El campo 'status' debe ser booleano (true o false)"
+      });
     }
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({ msg: "ID no válido" });
     }
 
     let usuario;
+
     if (tipo === "estudiante") {
       usuario = await Estudiante.findById(id);
     } else if (tipo === "arrendatario") {
@@ -365,12 +494,18 @@ const cambiarEstadoUsuario = async (req, res) => {
       return res.status(404).json({ msg: "Usuario no encontrado" });
     }
 
-    usuario.confirmEmail = confirmEmail;
+    usuario.status = status;
     await usuario.save();
 
-    res.status(200).json({ msg: "confirmEmail actualizado correctamente", usuario });
+    res.status(200).json({
+      msg: "Estado actualizado correctamente",
+      usuario
+    });
   } catch (error) {
-    res.status(500).json({ msg: "Error al actualizar confirmEmail", error: error.message });
+    res.status(500).json({
+      msg: "Error al actualizar el estado",
+      error: error.message
+    });
   }
 };
 

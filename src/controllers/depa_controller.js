@@ -86,6 +86,108 @@ const registrarDepartamento = async (req, res) => {
       }
     }
 
+
+  // Título
+  if (
+    req.body.titulo.trim().length < 5 ||
+    req.body.titulo.trim().length > 50
+  ) {
+    return res.status(400).json({
+      msg: "El título debe tener entre 5 y 50 caracteres."
+    });
+  }
+
+  // Descripción
+  if (
+    req.body.descripcion.trim().length < 10 ||
+    req.body.descripcion.trim().length > 1000
+  ) {
+    return res.status(400).json({
+      msg: "La descripción debe tener entre 10 y 1000 caracteres."
+    });
+  }
+
+  // Dirección
+  if (
+    req.body.direccion.trim().length < 5 ||
+    req.body.direccion.trim().length > 100
+  ) {
+    return res.status(400).json({
+      msg: "La dirección debe tener entre 5 y 100 caracteres."
+    });
+  }
+
+  // Precio
+  if (
+    isNaN(req.body.precioMensual) ||
+    Number(req.body.precioMensual) <= 0
+  ) {
+    return res.status(400).json({
+      msg: "El precio mensual debe ser un valor mayor a 0."
+    });
+  }
+
+  // Habitaciones
+  if (
+    isNaN(req.body.numeroHabitaciones) ||
+    Number(req.body.numeroHabitaciones) < 1
+  ) {
+    return res.status(400).json({
+      msg: "Debe existir al menos una habitación."
+    });
+  }
+
+  // Baños
+  if (
+    isNaN(req.body.numeroBanos) ||
+    Number(req.body.numeroBanos) < 1
+  ) {
+    return res.status(400).json({
+      msg: "Debe existir al menos un baño."
+    });
+  }
+
+  // Categoría
+  if (
+    !["suit", "departamento"].includes(req.body.categoria)
+  ) {
+    return res.status(400).json({
+      msg: "La categoría debe ser 'suit' o 'departamento'."
+    });
+  }
+
+  // URL del mapa
+  if (req.body.urlMapa) {
+    try {
+      new URL(req.body.urlMapa);
+    } catch {
+      return res.status(400).json({
+        msg: "La URL del mapa no es válida."
+      });
+    }
+  }
+
+  // Al menos una imagen
+  if (!req.files?.imagenes) {
+    return res.status(400).json({
+      msg: "Debe subir al menos una imagen del departamento."
+    });
+  }
+
+  // Máximo 10 imágenes
+  if (
+    req.files?.imagenes &&
+    (
+      Array.isArray(req.files.imagenes)
+        ? req.files.imagenes.length
+        : 1
+    ) > 10
+  ) {
+    return res.status(400).json({
+      msg: "Solo se permiten hasta 10 imágenes."
+    });
+  }
+
     const imagenesSubidas = [];
 
     // Subida de imágenes del departamento
@@ -118,19 +220,34 @@ const registrarDepartamento = async (req, res) => {
       await fs.unlink(req.files.qrPago.tempFilePath);
     }
 
-    // Validación de alicuota y alicoutaMonto
+    // Validación de alícuota y alicoutaMonto
     const alicuotaBool = alicuota === true || alicuota === "true";
+
     if (alicuotaBool) {
-      if (!alicoutaMonto || isNaN(alicoutaMonto)) {
-        return res.status(400).json({ msg: "Debe ingresar el monto de la alícuota si escogió la opción de alícuota." });
+      if (
+        !alicoutaMonto ||
+        isNaN(alicoutaMonto) ||
+        Number(alicoutaMonto) <= 0
+      ) {
+        return res.status(400).json({
+          msg: "Debe ingresar un monto de alícuota válido mayor a 0."
+        });
       }
     }
 
     // Validación de parqueadero y numParqueaderos
     const parqueaderoBool = parqueadero === true || parqueadero === "true";
+
     if (parqueaderoBool) {
-      if (!numParqueaderos || isNaN(numParqueaderos) || Number(numParqueaderos) < 1) {
-        return res.status(400).json({ msg: "Debe ingresar el número de parqueaderos si escogió la opción de parqueadero." });
+      if (
+        !numParqueaderos ||
+        isNaN(numParqueaderos) ||
+        Number(numParqueaderos) < 1 ||
+        Number(numParqueaderos) > 10
+      ) {
+        return res.status(400).json({
+          msg: "El número de parqueaderos debe estar entre 1 y 10."
+        });
       }
     }
 
@@ -213,6 +330,132 @@ const actualizarDepartamento = async (req, res) => {
       return res.status(404).json({ msg: "Departamento no encontrado" });
     }
 
+    // Título
+    if (req.body.titulo !== undefined) {
+      if (
+        req.body.titulo.trim().length < 5 ||
+        req.body.titulo.trim().length > 50
+      ) {
+        return res.status(400).json({
+          msg: "El título debe tener entre 5 y 50 caracteres."
+        });
+      }
+    }
+
+    // Descripción
+    if (req.body.descripcion !== undefined) {
+      if (
+        req.body.descripcion.trim().length < 10 ||
+        req.body.descripcion.trim().length > 1000
+      ) {
+        return res.status(400).json({
+          msg: "La descripción debe tener entre 10 y 1000 caracteres."
+        });
+      }
+    }
+
+    // Dirección
+    if (req.body.direccion !== undefined) {
+      if (
+        req.body.direccion.trim().length < 5 ||
+        req.body.direccion.trim().length > 100
+      ) {
+        return res.status(400).json({
+          msg: "La dirección debe tener entre 5 y 100 caracteres."
+        });
+      }
+    }
+
+    // Precio
+    if (req.body.precioMensual !== undefined) {
+      if (
+        isNaN(req.body.precioMensual) ||
+        Number(req.body.precioMensual) <= 0
+      ) {
+        return res.status(400).json({
+          msg: "El precio mensual debe ser mayor a 0."
+        });
+      }
+    }
+
+    // Habitaciones
+    if (req.body.numeroHabitaciones !== undefined) {
+      if (
+        isNaN(req.body.numeroHabitaciones) ||
+        Number(req.body.numeroHabitaciones) < 1
+      ) {
+        return res.status(400).json({
+          msg: "Debe existir al menos una habitación."
+        });
+      }
+    }
+
+    // Baños
+    if (req.body.numeroBanos !== undefined) {
+      if (
+        isNaN(req.body.numeroBanos) ||
+        Number(req.body.numeroBanos) < 1
+      ) {
+        return res.status(400).json({
+          msg: "Debe existir al menos un baño."
+        });
+      }
+    }
+
+    // Categoría
+    if (req.body.categoria !== undefined) {
+      if (!["suit", "departamento"].includes(req.body.categoria)) {
+        return res.status(400).json({
+          msg: "La categoría debe ser 'suit' o 'departamento'."
+        });
+      }
+    }
+
+    // URL del mapa
+    if (req.body.urlMapa !== undefined && req.body.urlMapa !== "") {
+      try {
+        new URL(req.body.urlMapa);
+      } catch {
+        return res.status(400).json({
+          msg: "La URL del mapa no es válida."
+        });
+      }
+    }
+
+    // Alícuota
+    if (
+      req.body.alicuota === true ||
+      req.body.alicuota === "true"
+    ) {
+      if (
+        req.body.alicoutaMonto === undefined ||
+        isNaN(req.body.alicoutaMonto) ||
+        Number(req.body.alicoutaMonto) <= 0
+      ) {
+        return res.status(400).json({
+          msg: "Debe ingresar un monto de alícuota válido mayor a 0."
+        });
+      }
+    }
+
+    // Parqueaderos
+    if (
+      req.body.parqueadero === true ||
+      req.body.parqueadero === "true"
+    ) {
+      if (
+        req.body.numParqueaderos === undefined ||
+        isNaN(req.body.numParqueaderos) ||
+        Number(req.body.numParqueaderos) < 1 ||
+        Number(req.body.numParqueaderos) > 10
+      ) {
+        return res.status(400).json({
+          msg: "El número de parqueaderos debe estar entre 1 y 10."
+        });
+      }
+    }
+
+  
     // Actualiza solo los campos enviados en el body
     const camposActualizables = [
       "titulo", "descripcion", "direccion", "categoria", "precioMensual",
@@ -227,12 +470,38 @@ const actualizarDepartamento = async (req, res) => {
       }
     });
 
+    if (departamento.alicuota === false) {
+      departamento.alicoutaMonto = null;
+    }
+
+    if (departamento.parqueadero === false) {
+      departamento.numParqueaderos = 0;
+    }
+
     // Actualizar metodoPago si viene en el body
     if (req.body.metodoPago) {
       departamento.metodoPago = {
         ...departamento.metodoPago,
         ...req.body.metodoPago
       };
+    }
+
+    if (
+      departamento.metodoPago?.numeroCedula &&
+      !/^\d{10}$/.test(departamento.metodoPago.numeroCedula)
+    ) {
+      return res.status(400).json({
+        msg: "La cédula debe contener exactamente 10 dígitos."
+      });
+    }
+
+    if (
+      departamento.metodoPago?.cuentaBancaria &&
+      !/^\d+$/.test(departamento.metodoPago.cuentaBancaria)
+    ) {
+      return res.status(400).json({
+        msg: "La cuenta bancaria solo debe contener números."
+      });
     }
 
     // Actualizar imagen QR de pago si se envía un archivo
@@ -286,10 +555,26 @@ const actualizarDepartamento = async (req, res) => {
 };
 
 
-const listarDepartamento = async (req,res)=>{
-    const departamentos = await Departamento.find()
-    res.status(200).json(departamentos)
-}
+const listarDepartamento = async (req, res) => {
+  try {
+    const { categoria } = req.query;
+
+    let filtro = {};
+
+    if (categoria) {
+      filtro.categoria = categoria;
+    }
+
+    const departamentos = await Departamento.find(filtro);
+
+    res.status(200).json(departamentos);
+  } catch (error) {
+    res.status(500).json({
+      msg: "Error al listar departamentos",
+      error: error.message
+    });
+  }
+};
 
 const eliminarDepa = async (req, res) => {
     const { id } = req.params;

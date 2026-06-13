@@ -176,6 +176,49 @@ const registrarEstudiante = async (req, res) => {
             return res.status(400).json({ msg: "El Email ya está registrado" });
         }
 
+        // Nombre
+        if (
+            nombre.trim().length < 3 ||
+            nombre.trim().length > 30
+        ) {
+            return res.status(400).json({
+                msg: "El nombre debe tener entre 3 y 30 caracteres."
+            });
+        }
+
+        // Apellido
+        if (
+            apellido.trim().length < 3 ||
+            apellido.trim().length > 30
+        ) {
+            return res.status(400).json({
+                msg: "El apellido debe tener entre 3 y 30 caracteres."
+            });
+        }
+
+        // Celular
+        if (!/^\d{10}$/.test(celular)) {
+            return res.status(400).json({
+                msg: "El celular debe contener exactamente 10 dígitos numéricos."
+            });
+        }
+
+        // Email
+        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        if (!regexEmail.test(email)) {
+            return res.status(400).json({
+                msg: "Debe ingresar un correo electrónico válido."
+            });
+        }
+
+        // Contraseña
+        if (password.length < 8 || password.length > 20) {
+            return res.status(400).json({
+                msg: "La contraseña debe tener entre 8 y 20 caracteres."
+            });
+        }
+
         // 3. Instanciar y asegurar password
         const nuevoEstudiante = new Estudiante(req.body);
         nuevoEstudiante.password = await nuevoEstudiante.encrypPassword(password);
@@ -222,6 +265,62 @@ const actualizarEstudiante = async (req, res) => {
 				return res.status(404).json({ msg: `El email ya se encuentra registrado` });
 			}
 		}
+
+    // Nombre
+    if (nombre !== undefined) {
+      if (
+        nombre.trim().length < 3 ||
+        nombre.trim().length > 30
+      ) {
+        return res.status(400).json({
+          msg: "El nombre debe tener entre 3 y 30 caracteres."
+        });
+      }
+    }
+
+    // Apellido
+    if (apellido !== undefined) {
+      if (
+        apellido.trim().length < 3 ||
+        apellido.trim().length > 30
+      ) {
+        return res.status(400).json({
+          msg: "El apellido debe tener entre 3 y 30 caracteres."
+        });
+      }
+    }
+
+    // Dirección
+    if (direccion !== undefined) {
+      if (
+        direccion.trim().length < 5 ||
+        direccion.trim().length > 100
+      ) {
+        return res.status(400).json({
+          msg: "La dirección debe tener entre 5 y 100 caracteres."
+        });
+      }
+    }
+
+    // Celular
+    if (celular !== undefined) {
+      if (!/^\d{10}$/.test(celular)) {
+        return res.status(400).json({
+          msg: "El celular debe contener exactamente 10 dígitos numéricos."
+        });
+      }
+    }
+
+    // Email
+    if (email !== undefined) {
+      const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!regexEmail.test(email)) {
+        return res.status(400).json({
+          msg: "Debe ingresar un correo electrónico válido."
+        });
+      }
+    }
 		estudianteBDD.nombre = nombre ?? estudianteBDD.nombre;
 		estudianteBDD.apellido = apellido ?? estudianteBDD.apellido;
 		estudianteBDD.direccion = direccion ?? estudianteBDD.direccion;

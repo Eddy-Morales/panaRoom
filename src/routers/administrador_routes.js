@@ -55,7 +55,7 @@ router.get('/administrador/recuperarpassword/:token', comprobarTokenPasswordAdmi
 // Crear nuevo password con token
 router.post('/administrador/nuevopassword/:token', crearNuevoPasswordAdministrador);
 // Actualizar password desde perfil (autenticado)
-router.put('/administrador/actualizarpassword/:id', verificarTokenJWT, actualizarPasswordAdministrador);
+router.put('/administrador/actualizarpassword', verificarTokenJWT, actualizarPasswordAdministrador);
 // Actualizar perfil del administrador (autenticado)
 router.put('/administrador/perfil/:id', verificarTokenJWT, actualizarPerfilAdministrador);
 
