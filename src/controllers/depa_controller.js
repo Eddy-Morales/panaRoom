@@ -39,12 +39,17 @@ const asignarEstudianteADepartamento = async (req, res) => {
       return res.status(404).json({ msg: "Departamento no encontrado" });
     }
 
-    // 4. Verificar si ya cuenta con un inquilino asignado
+    // 4. Verificar si el departamento está disponible
+    if (!departamento.disponible) {
+      return res.status(400).json({ msg: "El departamento no está disponible para asignación" });
+    }
+
+    // 5. Verificar si ya cuenta con un inquilino asignado
     if (departamento.estudiante) {
       return res.status(400).json({ msg: "El departamento ya tiene un estudiante asignado" });
     }
 
-    // 5. Vincular y guardar cambios de manera definitiva
+    // 6. Vincular y guardar cambios de manera definitiva
     departamento.estudiante = estudianteId;
     await departamento.save();
 
@@ -581,10 +586,14 @@ const eliminarDepa = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         return res.status(400).json({ msg: "ID de departamento no válido" });
     }
-    const depaEliminado = await Departamento.findByIdAndDelete(id);
-    if (!depaEliminado) {
+    const departamento = await Departamento.findById(id);
+    if (!departamento) {
         return res.status(404).json({ msg: "Departamento no encontrado" });
     }
+    if (departamento.estudiante) {
+        return res.status(400).json({ msg: "No se puede eliminar el departamento porque tiene un estudiante asignado" });
+    }
+    await Departamento.findByIdAndDelete(id);
     res.status(200).json({ msg: "Departamento eliminado correctamente" });
 };
 
@@ -655,9 +664,15 @@ const pagarDepartamento = async (req, res) => {
 };
 
 const quitarEstudianteDeDepartamento = async (req, res) => {
-  const { departamentoId } = req.body;
+  const { departamentoId, calificacion, descripcion } = req.body;
   if (!mongoose.Types.ObjectId.isValid(departamentoId)) {
     return res.status(400).json({ msg: "ID de departamento no válido" });
+  }
+  if (!descripcion || descripcion.trim() === "") {
+    return res.status(400).json({ msg: "La descripción es obligatoria" });
+  }
+  if (calificacion === undefined || typeof calificacion !== "number" || calificacion < 0) {
+    return res.status(400).json({ msg: "La calificación es obligatoria y debe ser un número positivo" });
   }
   try {
     const departamento = await Departamento.findById(departamentoId);
@@ -667,9 +682,24 @@ const quitarEstudianteDeDepartamento = async (req, res) => {
     if (!departamento.estudiante) {
       return res.status(400).json({ msg: "El departamento no tiene un estudiante asignado" });
     }
+
+    const estudianteId = departamento.estudiante;
+    const arrendatarioId = departamento.arrendatario;
+
     departamento.estudiante = null;
     await departamento.save();
-    res.status(200).json({ msg: "Estudiante removido del departamento correctamente", departamento });
+
+    const nuevaQuejaSugerencia = new QuejaSugerencias({
+      descripcion: descripcion.trim(),
+      usuario: estudianteId,
+      arrendatarioId: arrendatarioId || null,
+      departamento: departamentoId,
+      calificacion: calificacion || null,
+      tipoComentario: 'comentario'
+    });
+    await nuevaQuejaSugerencia.save();
+
+    res.status(200).json({ msg: "Estudiante removido del departamento correctamente y registro creado", departamento });
   } catch (error) {
     res.status(500).json({ msg: "Error al quitar estudiante", error: error.message });
   }
@@ -716,6 +746,11 @@ const registrarMensajeChat = async (req, res) => {
     // Al menos uno de los IDs debe estar presente
     if (!administradorId && !arrendatarioId && !estudianteId) {
       return res.status(400).json({ msg: "Debe especificar al menos un ID de usuario" });
+    }
+
+    // No permitir chats entre administrador y estudiante
+    if (administradorId && estudianteId && !arrendatarioId) {
+      return res.status(400).json({ msg: "No se permiten chats entre administrador y estudiante" });
     }
 
     // Crea el mensaje

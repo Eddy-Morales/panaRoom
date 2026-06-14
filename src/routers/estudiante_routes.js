@@ -21,6 +21,7 @@ import {
     ,registrarQuejaSugerenciaEstudiante,
 	listarDepartamentosEstudiante,
 	listarQuejasEstudiante,
+	listarComentariosRespondidos,
 	subirImagenEstudiante
 } from '../controllers/estudiante_controller.js'
 import { verificarTokenJWT } from '../middlewares/JWT.js'
@@ -97,6 +98,7 @@ router.post('/estudiante/queja-sugerencia', verificarTokenJWT, registrarQuejaSug
 
 router.get('/estudiante/departamentos', verificarTokenJWT, listarDepartamentosEstudiante)
 router.get('/estudiante/listarcomentarios', verificarTokenJWT, listarQuejasEstudiante)
+router.get('/estudiante/comentarios-respondidos', verificarTokenJWT, listarComentariosRespondidos)
 
 router.post('/estudiante/subirimagen', verificarTokenJWT, subirImagenEstudiante);
 

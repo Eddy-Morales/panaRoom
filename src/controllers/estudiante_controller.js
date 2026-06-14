@@ -430,6 +430,26 @@ const listarQuejasEstudiante = async (req, res) => {
   }
 };
 
+const listarComentariosRespondidos = async (req, res) => {
+  try {
+    const estudianteId = req.estudianteBDD?._id;
+    if (!estudianteId) {
+      return res.status(401).json({ msg: "No autenticado" });
+    }
+
+    const comentariosAprobados = await QuejaSugerencias.find({ 
+      usuario: estudianteId, 
+      estado: true 
+    })
+      .populate("departamento", "titulo direccion")
+      .populate("arrendatarioId", "nombre apellido email");
+
+    res.status(200).json(comentariosAprobados);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar los comentarios aprobados", error: error.message });
+  }
+};
+
 
 const subirImagenEstudiante = async (req, res) => {
   try {
@@ -486,6 +506,7 @@ export {
 	actualizarPerfilEstudiante
     ,registrarQuejaSugerenciaEstudiante,
 	listarQuejasEstudiante,
+	listarComentariosRespondidos,
 	subirImagenEstudiante
 }
 
