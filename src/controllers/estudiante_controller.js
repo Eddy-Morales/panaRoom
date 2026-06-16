@@ -395,14 +395,22 @@ const listarDepartamentosEstudiante = async (req, res) => {
       return res.status(401).json({ msg: "No autenticado" });
     }
 
+    const { categoria } = req.query;
+    const filtro = { estudiante: estudianteId };
+
+    // Aplicar filtro por categoría si se proporciona
+    if (categoria) {
+      filtro.categoria = categoria;
+    }
+
     const Departamento = (await import("../models/Departamento.js")).default;
-    const departamentos = await Departamento.find({ estudiante: estudianteId });
+    const departamentos = await Departamento.find(filtro);
 
     // 👇 Validar si el arreglo viene vacío
     if (departamentos.length === 0) {
-      return res.status(200).json({ 
-        msg: "Aún no tienes ningún departamento vinculado a tu cuenta.", 
-        departamentos: [] 
+      return res.status(200).json({
+        msg: "Aún no tienes ningún departamento vinculado a tu cuenta.",
+        departamentos: []
       });
     }
 

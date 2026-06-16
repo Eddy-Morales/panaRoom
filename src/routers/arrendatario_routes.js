@@ -12,6 +12,7 @@ import {
   cambiarDisponibilidadDepartamentoArrendatario,
   obtenerQuejasSugerenciasDepartamento,
   listarArrendatarios,
+  listarDepartamentosArrendatario,
   subirImagenArrendatario
 } from '../controllers/arrendatario_controller.js'
 
@@ -36,6 +37,7 @@ router.put('/arrendatario/:id',verificarTokenJWT,actualizarPerfil)
 router.put('/arrendatario/actualizarpassword/:id',verificarTokenJWT,actualizarPassword)
 router.put('/arrendatario/cambiarDisponibilidad/:idDepartamento', verificarTokenJWT, cambiarDisponibilidadDepartamentoArrendatario)
 router.get('/arrendatario/listararrendatarios', verificarTokenJWT, listarArrendatarios)
+router.get('/arrendatario/departamentos', verificarTokenJWT, listarDepartamentosArrendatario)
 router.post('/arrendatario/subirimagen', verificarTokenJWT, subirImagenArrendatario)
 
 

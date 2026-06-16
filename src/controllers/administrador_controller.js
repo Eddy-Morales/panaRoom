@@ -36,10 +36,26 @@ const cambiarPasswordArrendatario = async (req, res) => {
 // Listar todas las quejas/sugerencias
 const listarTodasQuejasSugerencias = async (req, res) => {
   try {
-    const quejas = await QuejaSugerencias.find()
+    const { estado } = req.query;
+
+    // Construimos el filtro dinámico
+    const filtro = {};
+
+    // Si viene el parámetro estado, lo aplicamos
+    if (estado !== undefined) {
+      // Convertimos string a boolean
+      if (estado === "true") {
+        filtro.estado = true;
+      } else if (estado === "false") {
+        filtro.estado = false;
+      }
+    }
+
+    const quejas = await QuejaSugerencias.find(filtro)
       .populate("usuario", "nombre apellido email")
       .populate("arrendatarioId", "nombre apellido email")
       .populate("departamento", "titulo direccion");
+
     res.status(200).json(quejas);
   } catch (error) {
     res.status(500).json({ msg: "Error al listar quejas/sugerencias", error });

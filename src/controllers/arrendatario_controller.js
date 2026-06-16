@@ -445,7 +445,10 @@ const actualizarPerfil = async (req, res) => {
 
 const actualizarPassword = async (req,res)=>{
     const arrendatarioBDD = await Arrendatario.findById(req.arrendatarioBDD._id)
-    if(!arrendatarioBDD) return res.status(404).json({msg:`Lo sentimos, no existe el veterinario ${id}`})
+    
+    // CORRECCIÓN: Cambiar ${id} por ${req.arrendatarioBDD._id}
+    if(!arrendatarioBDD) return res.status(404).json({msg:`Lo sentimos, no existe el arrendatario ${req.arrendatarioBDD._id}`})
+    
     const verificarPassword = await arrendatarioBDD.matchPassword(req.body.passwordactual)
     if(!verificarPassword) return res.status(404).json({msg:"Lo sentimos, el password actual no es el correcto"})
     arrendatarioBDD.password = await arrendatarioBDD.encrypPassword(req.body.passwordnuevo)
@@ -490,6 +493,38 @@ const listarArrendatarios = async (req, res) => {
     res.status(200).json(arrendatarios);
   } catch (error) {
     res.status(500).json({ msg: "Error al listar arrendatarios", error: error.message });
+  }
+};
+
+const listarDepartamentosArrendatario = async (req, res) => {
+  try {
+    const arrendatarioId = req.arrendatarioBDD?._id;
+    if (!arrendatarioId) {
+      return res.status(401).json({ msg: "No autenticado" });
+    }
+
+    const { categoria } = req.query;
+    const filtro = { arrendatario: arrendatarioId };
+
+    // Aplicar filtro por categoría si se proporciona
+    if (categoria) {
+      filtro.categoria = categoria;
+    }
+
+    const departamentos = await Departamento.find(filtro);
+
+    // Validar si el arreglo viene vacío
+    if (departamentos.length === 0) {
+      return res.status(200).json({
+        msg: "Aún no tienes ningún departamento vinculado a tu cuenta.",
+        departamentos: []
+      });
+    }
+
+    // Si sí tiene departamentos, los enviamos normalmente
+    res.status(200).json(departamentos);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al listar departamentos", error: error.message });
   }
 };
 
@@ -541,8 +576,9 @@ export {
   actualizarPerfil,
   actualizarPassword,
   cambiarDisponibilidadDepartamentoArrendatario
-  
+
   ,obtenerQuejasSugerenciasDepartamento,
   listarArrendatarios,
+  listarDepartamentosArrendatario,
   subirImagenArrendatario
 }
