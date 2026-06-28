@@ -134,9 +134,13 @@ const loginEstudiante = async (req, res) => {
 		return res.status(400).json({ msg: "Lo sentimos, debes llenar todos los campos" });
 	}
 
-	const estudianteBDD = await Estudiante.findOne({ email }).select("-status -__v -token -updatedAt -createdAt");
+	const estudianteBDD = await Estudiante.findOne({ email }).select("-__v -token -updatedAt -createdAt");
 	if (!estudianteBDD) {
 		return res.status(404).json({ msg: "Lo sentimos, el usuario no se encuentra registrado" });
+	}
+
+	if (estudianteBDD.status === false) {
+		return res.status(403).json({ msg: "Lo sentimos, tu cuenta esta desactivada" });
 	}
 
 	if (!estudianteBDD.password) {

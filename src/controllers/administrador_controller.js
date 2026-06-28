@@ -457,7 +457,7 @@ const cambiarEstadoQuejaSugerencia = async (req, res) => {
   try {
     // Permite recibir el id por params o por body
     const id = req.params.id || req.body.id;
-    const { estado } = req.body; // true o false
+    const { estado, comentarioUsuario } = req.body; // true o false, comentario opcional
 
     if (typeof estado !== "boolean") {
       return res.status(400).json({ msg: "El campo 'estado' debe ser booleano (true o false)" });
@@ -473,6 +473,12 @@ const cambiarEstadoQuejaSugerencia = async (req, res) => {
     }
 
     queja.estado = estado;
+
+    // Actualizar comentarioUsuario si se proporciona (opcional)
+    if (comentarioUsuario !== undefined && comentarioUsuario !== null) {
+      queja.comentarioUsuario = comentarioUsuario;
+    }
+
     await queja.save();
 
     res.status(200).json({ msg: "Estado actualizado correctamente", queja });

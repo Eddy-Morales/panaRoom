@@ -672,7 +672,7 @@ const quitarEstudianteDeDepartamento = async (req, res) => {
     return res.status(400).json({ msg: "La descripción es obligatoria" });
   }
   if (calificacion === undefined || typeof calificacion !== "number" || calificacion < 0) {
-    return res.status(400).json({ msg: "La calificación es obligatoria y debe ser un número positivo" });
+    return res.status(400).json({ msg: "La calificación es obligatoria" });
   }
   try {
     const departamento = await Departamento.findById(departamentoId);
@@ -720,6 +720,11 @@ const cambiarDisponibilidadDepartamento = async (req, res) => {
     const departamento = await Departamento.findById(departamentoId);
     if (!departamento) {
       return res.status(404).json({ msg: "Departamento no encontrado" });
+    }
+
+    // Validar que no se pueda cambiar disponibilidad si hay un estudiante vinculado
+    if (departamento.estudiante) {
+      return res.status(400).json({ msg: "No se puede cambiar la disponibilidad mientras haya un estudiante vinculado al departamento" });
     }
 
     departamento.disponible = disponible;
