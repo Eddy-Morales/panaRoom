@@ -479,6 +479,18 @@ const subirImagenEstudiante = async (req, res) => {
       return res.status(400).json({ msg: "No se envió ninguna imagen" });
     }
 
+    // =========================================================
+    // NUEVA VALIDACIÓN: Límite de tamaño (5MB) para el avatar
+    // =========================================================
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB en Bytes
+
+    if (req.files.imagen.size > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        msg: "La imagen de perfil excede el límite de tamaño permitido de 5MB."
+      });
+    }
+    // =========================================================
+
     // Si ya hay una imagen anterior, la eliminamos de Cloudinary
     if (estudiante.avatarEstudianteID) {
       await cloudinary.uploader.destroy(estudiante.avatarEstudianteID);

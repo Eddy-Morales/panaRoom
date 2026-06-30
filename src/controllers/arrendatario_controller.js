@@ -106,6 +106,31 @@ const crearArrendatario = async (req, res) => {
       });
     }
 
+    // =========================================================
+    // NUEVA VALIDACIÓN: Límite de tamaño (5MB) para documentos
+    // =========================================================
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB en Bytes
+
+    if (req.files?.imagenesDocumentos) {
+      const archivosValidacion = Array.isArray(req.files.imagenesDocumentos)
+        ? req.files.imagenesDocumentos
+        : [req.files.imagenesDocumentos];
+
+      for (const archivo of archivosValidacion) {
+        if (archivo.size > MAX_FILE_SIZE) {
+          // Limpieza preventiva de todos los archivos temporales recibidos
+          for (const a of archivosValidacion) {
+            await fs.unlink(a.tempFilePath).catch(() => {});
+          }
+
+          return res.status(400).json({
+            msg: `El archivo "${archivo.name}" excede el límite de tamaño permitido de 5MB.`
+          });
+        }
+      }
+    }
+    // =========================================================
+
     // 8. Subir documentos a Cloudinary
     const imagenesDocumentos = [];
 
@@ -114,7 +139,7 @@ const crearArrendatario = async (req, res) => {
         ? req.files.imagenesDocumentos
         : [req.files.imagenesDocumentos];
 
-      const formatosPermitidos = [
+      const formatsPermitidos = [
         "image/jpeg",
         "image/png",
         "image/jpg",
@@ -122,7 +147,7 @@ const crearArrendatario = async (req, res) => {
       ];
 
       for (const archivo of archivos) {
-        if (!formatosPermitidos.includes(archivo.mimetype)) {
+        if (!formatsPermitidos.includes(archivo.mimetype)) {
           await fs.unlink(archivo.tempFilePath);
 
           return res.status(400).json({
@@ -168,7 +193,7 @@ const crearArrendatario = async (req, res) => {
   } catch (error) {
     console.error("Error al crear arrendatario:", error);
 
-    // Limpieza de archivos temporales
+    // Limpieza de archivos temporales en caso de errores inesperados
     if (req.files?.imagenesDocumentos) {
       const archivos = Array.isArray(req.files.imagenesDocumentos)
         ? req.files.imagenesDocumentos
@@ -187,7 +212,6 @@ const crearArrendatario = async (req, res) => {
     });
   }
 };
-
 
 
 
@@ -548,6 +572,18 @@ const subirImagenArrendatario = async (req, res) => {
     if (!req.files || !req.files.imagen) {
       return res.status(400).json({ msg: "No se envió ninguna imagen" });
     }
+
+    // =========================================================
+    // NUEVA VALIDACIÓN: Límite de tamaño (5MB) para el avatar
+    // =========================================================
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB en Bytes
+
+    if (req.files.imagen.size > MAX_FILE_SIZE) {
+      return res.status(400).json({
+        msg: "La imagen de perfil excede el límite de tamaño permitido de 5MB."
+      });
+    }
+    // =========================================================
 
     // Si ya hay una imagen anterior, la eliminamos de Cloudinary
     if (arrendatario.avatarArrenID) {

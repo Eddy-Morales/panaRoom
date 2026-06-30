@@ -91,107 +91,136 @@ const registrarDepartamento = async (req, res) => {
       }
     }
 
-
-  // Título
-  if (
-    req.body.titulo.trim().length < 5 ||
-    req.body.titulo.trim().length > 50
-  ) {
-    return res.status(400).json({
-      msg: "El título debe tener entre 5 y 50 caracteres."
-    });
-  }
-
-  // Descripción
-  if (
-    req.body.descripcion.trim().length < 10 ||
-    req.body.descripcion.trim().length > 1000
-  ) {
-    return res.status(400).json({
-      msg: "La descripción debe tener entre 10 y 1000 caracteres."
-    });
-  }
-
-  // Dirección
-  if (
-    req.body.direccion.trim().length < 5 ||
-    req.body.direccion.trim().length > 100
-  ) {
-    return res.status(400).json({
-      msg: "La dirección debe tener entre 5 y 100 caracteres."
-    });
-  }
-
-  // Precio
-  if (
-    isNaN(req.body.precioMensual) ||
-    Number(req.body.precioMensual) <= 0
-  ) {
-    return res.status(400).json({
-      msg: "El precio mensual debe ser un valor mayor a 0."
-    });
-  }
-
-  // Habitaciones
-  if (
-    isNaN(req.body.numeroHabitaciones) ||
-    Number(req.body.numeroHabitaciones) < 1
-  ) {
-    return res.status(400).json({
-      msg: "Debe existir al menos una habitación."
-    });
-  }
-
-  // Baños
-  if (
-    isNaN(req.body.numeroBanos) ||
-    Number(req.body.numeroBanos) < 1
-  ) {
-    return res.status(400).json({
-      msg: "Debe existir al menos un baño."
-    });
-  }
-
-  // Categoría
-  if (
-    !["suit", "departamento"].includes(req.body.categoria)
-  ) {
-    return res.status(400).json({
-      msg: "La categoría debe ser 'suit' o 'departamento'."
-    });
-  }
-
-  // URL del mapa
-  if (req.body.urlMapa) {
-    try {
-      new URL(req.body.urlMapa);
-    } catch {
+    // Título
+    if (
+      req.body.titulo.trim().length < 5 ||
+      req.body.titulo.trim().length > 50
+    ) {
       return res.status(400).json({
-        msg: "La URL del mapa no es válida."
+        msg: "El título debe tener entre 5 y 50 caracteres."
       });
     }
-  }
 
-  // Al menos una imagen
-  if (!req.files?.imagenes) {
-    return res.status(400).json({
-      msg: "Debe subir al menos una imagen del departamento."
-    });
-  }
+    // Descripción
+    if (
+      req.body.descripcion.trim().length < 10 ||
+      req.body.descripcion.trim().length > 1000
+    ) {
+      return res.status(400).json({
+        msg: "La descripción debe tener entre 10 y 1000 caracteres."
+      });
+    }
 
-  // Máximo 10 imágenes
-  if (
-    req.files?.imagenes &&
-    (
-      Array.isArray(req.files.imagenes)
-        ? req.files.imagenes.length
-        : 1
-    ) > 10
-  ) {
-    return res.status(400).json({
-      msg: "Solo se permiten hasta 10 imágenes."
-    });
-  }
+    // Dirección
+    if (
+      req.body.direccion.trim().length < 5 ||
+      req.body.direccion.trim().length > 100
+    ) {
+      return res.status(400).json({
+        msg: "La dirección debe tener entre 5 y 100 caracteres."
+      });
+    }
+
+    // Precio
+    if (
+      isNaN(req.body.precioMensual) ||
+      Number(req.body.precioMensual) <= 0
+    ) {
+      return res.status(400).json({
+        msg: "El precio mensual debe ser un valor mayor a 0."
+      });
+    }
+
+    // Habitaciones
+    if (
+      isNaN(req.body.numeroHabitaciones) ||
+      Number(req.body.numeroHabitaciones) < 1
+    ) {
+      return res.status(400).json({
+        msg: "Debe existir al menos una habitación."
+      });
+    }
+
+    // Baños
+    if (
+      isNaN(req.body.numeroBanos) ||
+      Number(req.body.numeroBanos) < 1
+    ) {
+      return res.status(400).json({
+        msg: "Debe existir al menos un baño."
+      });
+    }
+
+    // Categoría
+    if (
+      !["suit", "departamento"].includes(req.body.categoria)
+    ) {
+      return res.status(400).json({
+        msg: "La categoría debe ser 'suit' o 'departamento'."
+      });
+    }
+
+    // URL del mapa
+    if (req.body.urlMapa) {
+      try {
+        new URL(req.body.urlMapa);
+      } catch {
+        return res.status(400).json({
+          msg: "La URL del mapa no es válida."
+        });
+      }
+    }
+
+    // Al menos una imagen
+    if (!req.files?.imagenes) {
+      return res.status(400).json({
+        msg: "Debe subir al menos una imagen del departamento."
+      });
+    }
+
+    // Máximo 10 imágenes
+    if (
+      req.files?.imagenes &&
+      (
+        Array.isArray(req.files.imagenes)
+          ? req.files.imagenes.length
+          : 1
+      ) > 10
+    ) {
+      return res.status(400).json({
+        msg: "Solo se permiten hasta 10 imágenes."
+      });
+    }
+
+    // ==========================================
+    // NUEVA VALIDACIÓN: Límite de tamaño (5MB)
+    // ==========================================
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 Megabytes en Bytes
+
+    // Validar tamaño de las imágenes del departamento
+    if (req.files?.imagenes) {
+      const archivosImagenes = Array.isArray(req.files.imagenes)
+        ? req.files.imagenes
+        : [req.files.imagenes];
+
+      for (const archivo of archivosImagenes) {
+        if (archivo.size > MAX_FILE_SIZE) {
+          return res.status(400).json({
+            msg: `La imagen "${archivo.name}" excede el límite de tamaño permitido de 5MB.`
+          });
+        }
+      }
+    }
+
+    // Validar tamaño del QR de pago
+    if (req.files?.qrPago) {
+      if (req.files.qrPago.size > MAX_FILE_SIZE) {
+        return res.status(400).json({
+          msg: "El archivo del QR de pago excede el límite de tamaño permitido de 5MB."
+        });
+      }
+    }
+    // ==========================================
 
     const imagenesSubidas = [];
 
@@ -460,7 +489,36 @@ const actualizarDepartamento = async (req, res) => {
       }
     }
 
-  
+    // =========================================================
+    // NUEVA VALIDACIÓN: Límite de tamaño (5MB) para archivos
+    // =========================================================
+    const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB en Bytes
+
+    // Validar tamaño de nuevas imágenes si se envían
+    if (req.files?.imagenes) {
+      const archivosImagenes = Array.isArray(req.files.imagenes)
+        ? req.files.imagenes
+        : [req.files.imagenes];
+
+      for (const archivo of archivosImagenes) {
+        if (archivo.size > MAX_FILE_SIZE) {
+          return res.status(400).json({
+            msg: `La imagen "${archivo.name}" excede el límite de tamaño permitido de 5MB.`
+          });
+        }
+      }
+    }
+
+    // Validar tamaño del nuevo QR de pago si se envía
+    if (req.files?.qrPago) {
+      if (req.files.qrPago.size > MAX_FILE_SIZE) {
+        return res.status(400).json({
+          msg: "El archivo del QR de pago excede el límite de tamaño permitido de 5MB."
+        });
+      }
+    }
+    // =========================================================
+
     // Actualiza solo los campos enviados en el body
     const camposActualizables = [
       "titulo", "descripcion", "direccion", "categoria", "precioMensual",
@@ -558,7 +616,6 @@ const actualizarDepartamento = async (req, res) => {
     res.status(500).json({ msg: "Error al actualizar el departamento", error: error.message });
   }
 };
-
 
 const listarDepartamento = async (req, res) => {
   try {
